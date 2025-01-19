@@ -1,6 +1,6 @@
 import Image from "next/image";
 import logo from "../../../public/logo.png";
-import { Button } from "~/components/ui/button";
+import { LogOutButton } from "./components/LogOutButton";
 
 export default function DashboardPage() {
   return (
@@ -10,7 +10,7 @@ export default function DashboardPage() {
         <header className="flex items-center justify-between pt-8">
           <Image src={logo} alt="Tukma Logo" className="h-12 w-auto" />
           <div>
-            <Button variant={"link"}>Log out</Button>
+            <LogOutButton />
           </div>
         </header>
         <main className="flex min-h-[700px] flex-col items-center justify-center text-center">

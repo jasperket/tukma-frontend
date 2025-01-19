@@ -29,5 +29,4 @@ export async function createSession(
 export async function deleteSession() {
   const cookieStore = await cookies();
   cookieStore.delete("jwt");
-  redirect("/");
 }

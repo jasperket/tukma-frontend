@@ -4,6 +4,7 @@ import { type LoginResponse } from "~/app/lib/types/auth";
 import { type LoginFormValues } from "../components/LogInDialog";
 import { type SignUpFormValues } from "../components/SignUpDialog";
 import { cookies } from "next/headers";
+import { deleteSession } from "../lib/session";
 
 const BASE_URL = "https://backend.tukma.work";
 
@@ -109,10 +110,7 @@ export async function logout() {
     await deleteSession();
     return { success: true };
   } catch (error) {
-    if (error instanceof Error) {
-      console.log("Logout error:", error.message);
-      return { success: false, error: error.message };
-    }
-    return { success: false, error: "An unexpected error occurred" };
+    console.error("Logout error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "An unexpected error occurred" };
   }
 }
