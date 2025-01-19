@@ -28,10 +28,10 @@ const signUpSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z
     .string()
-    .min(8, "Password must be at least 8 characters")
+    .min(12, "Password must be at least 12 characters")
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+      "Password must contain at least one uppercase letter, one lowercase letter, and one number",
     ),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
@@ -58,11 +58,15 @@ export function SignUpDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="link" className="text-text-200 hover:text-text-100">Sign up</Button>
+        <Button variant="link" className="text-text-200 hover:text-text-100">
+          Sign up
+        </Button>
       </DialogTrigger>
       <DialogContent className="bg-background-900">
         <DialogHeader>
-          <DialogTitle className="font-serif text-2xl text-text-100">Create an account</DialogTitle>
+          <DialogTitle className="text-text-100 font-serif text-2xl">
+            Create an account
+          </DialogTitle>
           <DialogDescription className="text-text-300">
             Enter your information below to create your account.
           </DialogDescription>
@@ -77,9 +81,9 @@ export function SignUpDialog() {
                   <FormItem>
                     <FormLabel className="text-text-200">First name</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="John" 
-                        {...field} 
+                      <Input
+                        placeholder="John"
+                        {...field}
                         className="bg-background-950 border-background-800 text-text-100 placeholder:text-text-400"
                       />
                     </FormControl>
@@ -94,9 +98,9 @@ export function SignUpDialog() {
                   <FormItem>
                     <FormLabel className="text-text-200">Last name</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Doe" 
-                        {...field} 
+                      <Input
+                        placeholder="Doe"
+                        {...field}
                         className="bg-background-950 border-background-800 text-text-100 placeholder:text-text-400"
                       />
                     </FormControl>
@@ -130,22 +134,25 @@ export function SignUpDialog() {
                 <FormItem>
                   <FormLabel className="text-text-200">Password</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="password" 
-                      {...field} 
+                    <Input
+                      type="password"
+                      {...field}
                       className="bg-background-950 border-background-800 text-text-100 placeholder:text-text-400"
                     />
                   </FormControl>
                   <FormDescription className="text-text-400">
-                    Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
+                    Password must contain at least: <br />
+                    - 12 characters <br />
+                    - one uppercase letter <br />
+                    - one lowercase letter <br />- one number.
                   </FormDescription>
                   <FormMessage className="text-primary-300" />
                 </FormItem>
               )}
             />
-            <Button 
-              type="submit" 
-              className="w-full bg-primary-300 hover:bg-primary-400"
+            <Button
+              type="submit"
+              className="bg-primary-300 hover:bg-primary-400 w-full"
             >
               Sign up
             </Button>
