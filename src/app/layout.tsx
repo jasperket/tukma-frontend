@@ -1,7 +1,19 @@
 import "~/styles/globals.css";
 
-import { GeistSans } from "geist/font/sans";
+import { Inter, Lora } from "next/font/google";
 import { type Metadata } from "next";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+const lora = Lora({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-lora",
+});
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -13,7 +25,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable}`}>
+    <html lang="en" className={`${inter.variable} ${lora.variable}`}>
       <body>{children}</body>
     </html>
   );
