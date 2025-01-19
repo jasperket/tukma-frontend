@@ -67,6 +67,7 @@ export async function login(data: LoginFormValues) {
     }
 
     // Get the JWT from the Set-Cookie header
+    const cookieStore = await cookies();
     const setCookieHeader = response.headers.get("set-cookie");
     console.log("Set-Cookie header:", setCookieHeader);
 
@@ -79,13 +80,13 @@ export async function login(data: LoginFormValues) {
       if (jwtCookie) {
         // Parse out the JWT value and attributes
         const [cookieValue, ...cookieAttributes] = jwtCookie.split("; ");
-        const jwt = cookieValue.split("=")[1];
+        const jwt = cookieValue!.split("=")[1];
 
         console.log("Found JWT:", jwt);
         console.log("Cookie attributes:", cookieAttributes);
 
         // Set the cookie using Next.js
-        cookies().set("jwt", jwt, {
+        cookieStore.set("jwt", jwt!, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
