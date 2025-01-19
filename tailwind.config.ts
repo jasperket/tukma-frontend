@@ -2,21 +2,87 @@ import { type Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
 export default {
-    darkMode: ["class"],
-    content: ["./src/**/*.tsx"],
-    theme: {
-        extend: {
-            fontFamily: {
-                sans: ["var(--font-inter)", ...fontFamily.sans],
-                serif: ["var(--font-lora)", ...fontFamily.serif]
-            },
-            borderRadius: {
-                lg: "var(--radius)",
-                md: "calc(var(--radius) - 2px)",
-                sm: "calc(var(--radius) - 4px)"
-            },
-            colors: {}
-        }
+  darkMode: ["class"],
+  content: ["./src/**/*.tsx"],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ["var(--font-inter)", ...fontFamily.sans],
+        serif: ["var(--font-lora)", ...fontFamily.serif],
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      colors: {
+        text: {
+          50: "#100e09",
+          100: "#201c13",
+          200: "#413825",
+          300: "#615338",
+          400: "#826f4a",
+          500: "#a28b5d",
+          600: "#b5a27d",
+          700: "#c7b99e",
+          800: "#dad1be",
+          900: "#ece8df",
+          950: "#f6f3ef",
+        },
+        background: {
+          50: "#0f0e0a",
+          100: "#1e1d15",
+          200: "#3c392a",
+          300: "#5a563f",
+          400: "#787354",
+          500: "#969069",
+          600: "#aba687",
+          700: "#c0bca5",
+          800: "#d5d2c3",
+          900: "#eae9e1",
+          950: "#f5f4f0",
+        },
+        primary: {
+          50: "#110b08",
+          100: "#231610",
+          200: "#452d21",
+          300: "#684331",
+          400: "#8b5a41",
+          500: "#ad7052",
+          600: "#be8d74",
+          700: "#cea997",
+          800: "#dec6ba",
+          900: "#efe2dc",
+          950: "#f7f1ee",
+        },
+        secondary: {
+          50: "#121008",
+          100: "#232010",
+          200: "#47411f",
+          300: "#6a612f",
+          400: "#8e823e",
+          500: "#b1a24e",
+          600: "#c1b571",
+          700: "#d0c795",
+          800: "#e0dab8",
+          900: "#efecdc",
+          950: "#f7f6ed",
+        },
+        accent: {
+          50: "#121107",
+          100: "#24210f",
+          200: "#49421d",
+          300: "#6d642c",
+          400: "#92853a",
+          500: "#b6a649",
+          600: "#c5b86d",
+          700: "#d3ca92",
+          800: "#e2dbb6",
+          900: "#f0eddb",
+          950: "#f8f6ed",
+        },
+      },
     },
-    plugins: [require("tailwindcss-animate")],
+  },
+  plugins: [require("tailwindcss-animate")],
 } satisfies Config;

@@ -26,7 +26,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${inter.variable} ${lora.variable}`}>
-      <body>{children}</body>
+      <body className="bg-background-900 text-text-100">{children}</body>
     </html>
   );
 }
