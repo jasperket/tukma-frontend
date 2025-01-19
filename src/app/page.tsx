@@ -16,12 +16,12 @@ export default function HomePage() {
             <Button variant={"link"}>Sign up</Button>
           </div>
         </header>
-        <main className="flex flex-col items-center pt-80 text-center">
+        <main className="flex min-h-[700px] flex-col items-center justify-center text-center">
           <h1 className="text-text-100 font-serif text-6xl font-bold">
             We make work <span className="text-primary-300">work</span>.
           </h1>
           <div className="p-2"></div>
-          <p className="max-w-prose">
+          <p className="max-w-prose text-lg">
             Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptates
             recusandae aperiam expedita odio nemo mollitia quod ducimus eaque
             quisquam quos reprehenderit dignissimos veritatis necessitatibus,
