@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Button } from "~/components/ui/button";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -37,6 +38,7 @@ const signUpSchema = z.object({
     ),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  isInterviewer: z.boolean().default(false),
 });
 
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
@@ -52,6 +54,7 @@ export function SignUpDialog() {
       password: "",
       firstName: "",
       lastName: "",
+      isInterviewer: false,
     },
   });
 
@@ -172,6 +175,26 @@ export function SignUpDialog() {
                     - one lowercase letter <br />- one number
                   </FormDescription>
                   <FormMessage className="text-primary-300" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="isInterviewer"
+              render={({ field }) => (
+                <FormItem className="border-background-800 flex flex-row items-center justify-between space-y-0 rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-text-200">
+                      Are you an interviewer?
+                    </FormLabel>
+                  </div>
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="border-primary-300 data-[state=checked]:bg-primary-300 data-[state=checked]:text-background-950 h-5 w-5 border-2"
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />
