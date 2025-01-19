@@ -1,6 +1,6 @@
 import Image from "next/image";
 import logo from "../../public/logo.png";
-import { Button } from "~/components/ui/button";
+import { LogInDialog } from "./components/LogInDialog";
 import { SignUpDialog } from "./components/SignUpDialog";
 
 export default function HomePage() {
@@ -11,9 +11,7 @@ export default function HomePage() {
         <header className="flex items-center justify-between pt-8">
           <Image src={logo} alt="Tukma Logo" className="h-12 w-auto" />
           <div>
-            <Button className="bg-primary-300 hover:bg-primary-400">
-              Log in
-            </Button>
+            <LogInDialog />
             <SignUpDialog />
           </div>
         </header>
