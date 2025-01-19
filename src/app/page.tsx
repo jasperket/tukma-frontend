@@ -1,6 +1,7 @@
 import Image from "next/image";
 import logo from "../../public/logo.png";
 import { Button } from "~/components/ui/button";
+import { SignUpDialog } from "./components/SignUpDialog";
 
 export default function HomePage() {
   return (
@@ -13,7 +14,7 @@ export default function HomePage() {
             <Button className="bg-primary-300 hover:bg-primary-400">
               Log in
             </Button>
-            <Button variant={"link"}>Sign up</Button>
+            <SignUpDialog />
           </div>
         </header>
         <main className="flex min-h-[700px] flex-col items-center justify-center text-center">
