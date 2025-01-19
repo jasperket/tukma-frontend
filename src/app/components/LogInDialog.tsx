@@ -35,6 +35,7 @@ export type LoginFormValues = z.infer<typeof loginSchema>;
 export function LogInDialog() {
   const router = useRouter();
   const [error, setError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -44,11 +45,20 @@ export function LogInDialog() {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    const result = await login(data);
-    if (result.success) {
-      router.push("/dashboard");
-    } else {
-      setError(result.error ?? "An error occurred during login");
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await login(data);
+      if (result.success) {
+        router.push("/dashboard");
+      } else {
+        setError(result.error ?? "An error occurred during login");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -82,6 +92,7 @@ export function LogInDialog() {
                       type="email"
                       placeholder="johndoe@example.com"
                       {...field}
+                      disabled={isLoading}
                       className="bg-background-950 border-background-800 text-text-100 placeholder:text-text-400"
                     />
                   </FormControl>
@@ -99,6 +110,7 @@ export function LogInDialog() {
                     <Input
                       type="password"
                       {...field}
+                      disabled={isLoading}
                       className="bg-background-950 border-background-800 text-text-100 placeholder:text-text-400"
                     />
                   </FormControl>
@@ -108,9 +120,16 @@ export function LogInDialog() {
             />
             <Button
               type="submit"
-              className="bg-primary-300 hover:bg-primary-400 w-full"
+              disabled={isLoading}
+              className="bg-primary-300 hover:bg-primary-400 relative w-full"
             >
-              Log in
+              {isLoading ? (
+                <div className="absolute flex items-center justify-center">
+                  <span className="loader"></span>
+                </div>
+              ) : (
+                "Log in"
+              )}
             </Button>
           </form>
         </Form>

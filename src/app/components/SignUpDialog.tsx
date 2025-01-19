@@ -44,6 +44,7 @@ export type SignUpFormValues = z.infer<typeof signUpSchema>;
 export function SignUpDialog() {
   const router = useRouter();
   const [error, setError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -55,11 +56,20 @@ export function SignUpDialog() {
   });
 
   const onSubmit = async (data: SignUpFormValues) => {
-    const result = await signup(data);
-    if (result?.success) {
-      router.push("/dashboard");
-    } else {
-      setError(result?.error ?? "An error occurred during signup");
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await signup(data);
+      if (result?.success) {
+        router.push("/dashboard");
+      } else {
+        setError(result?.error ?? "An error occurred during signup");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -95,6 +105,7 @@ export function SignUpDialog() {
                       <Input
                         placeholder="John"
                         {...field}
+                        disabled={isLoading}
                         className="bg-background-950 border-background-800 text-text-100 placeholder:text-text-400"
                       />
                     </FormControl>
@@ -112,6 +123,7 @@ export function SignUpDialog() {
                       <Input
                         placeholder="Doe"
                         {...field}
+                        disabled={isLoading}
                         className="bg-background-950 border-background-800 text-text-100 placeholder:text-text-400"
                       />
                     </FormControl>
@@ -131,6 +143,7 @@ export function SignUpDialog() {
                       type="email"
                       placeholder="johndoe@example.com"
                       {...field}
+                      disabled={isLoading}
                       className="bg-background-950 border-background-800 text-text-100 placeholder:text-text-400"
                     />
                   </FormControl>
@@ -148,6 +161,7 @@ export function SignUpDialog() {
                     <Input
                       type="password"
                       {...field}
+                      disabled={isLoading}
                       className="bg-background-950 border-background-800 text-text-100 placeholder:text-text-400"
                     />
                   </FormControl>
@@ -155,7 +169,7 @@ export function SignUpDialog() {
                     Password must contain at least: <br />
                     - 12 characters <br />
                     - one uppercase letter <br />
-                    - one lowercase letter <br />- one number.
+                    - one lowercase letter <br />- one number
                   </FormDescription>
                   <FormMessage className="text-primary-300" />
                 </FormItem>
@@ -163,9 +177,16 @@ export function SignUpDialog() {
             />
             <Button
               type="submit"
-              className="bg-primary-300 hover:bg-primary-400 w-full"
+              disabled={isLoading}
+              className="bg-primary-300 hover:bg-primary-400 relative w-full"
             >
-              Sign up
+              {isLoading ? (
+                <div className="absolute flex items-center justify-center">
+                  <span className="loader"></span>
+                </div>
+              ) : (
+                "Sign up"
+              )}
             </Button>
           </form>
         </Form>
