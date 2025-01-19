@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
+import { signup } from "../actions/auth";
 
 const signUpSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -37,7 +38,7 @@ const signUpSchema = z.object({
   lastName: z.string().min(1, "Last name is required"),
 });
 
-type SignUpFormValues = z.infer<typeof signUpSchema>;
+export type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 export function SignUpDialog() {
   const form = useForm<SignUpFormValues>({
@@ -49,11 +50,6 @@ export function SignUpDialog() {
       lastName: "",
     },
   });
-
-  function onSubmit(data: SignUpFormValues) {
-    console.log(data);
-    // Handle form submission
-  }
 
   return (
     <Dialog>
@@ -72,7 +68,7 @@ export function SignUpDialog() {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(signup)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

@@ -22,13 +22,14 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
+import { login } from "../actions/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+export type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LogInDialog() {
   const form = useForm<LoginFormValues>({
@@ -38,11 +39,6 @@ export function LogInDialog() {
       password: "",
     },
   });
-
-  function onSubmit(data: LoginFormValues) {
-    console.log(data);
-    // Handle form submission
-  }
 
   return (
     <Dialog>
@@ -59,7 +55,7 @@ export function LogInDialog() {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(login)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"
