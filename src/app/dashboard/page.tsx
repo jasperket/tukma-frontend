@@ -1,5 +1,6 @@
 import Image from "next/image";
 import logo from "../../../public/logo.png";
+import { Button } from "~/components/ui/button";
 
 export default function DashboardPage() {
   return (
@@ -8,7 +9,9 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-7xl">
         <header className="flex items-center justify-between pt-8">
           <Image src={logo} alt="Tukma Logo" className="h-12 w-auto" />
-          <div></div>
+          <div>
+            <Button variant={"link"}>Log out</Button>
+          </div>
         </header>
         <main className="flex min-h-[700px] flex-col items-center justify-center text-center">
           <h1 className="text-text-100 font-serif text-6xl font-bold">
