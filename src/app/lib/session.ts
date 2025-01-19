@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function createSession(
   username: string,
@@ -27,6 +28,6 @@ export async function createSession(
 
 export async function deleteSession() {
   const cookieStore = await cookies();
-  cookieStore.delete("username");
-  cookieStore.delete("token");
+  cookieStore.delete("jwt");
+  redirect("/");
 }

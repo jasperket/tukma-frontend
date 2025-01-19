@@ -1,10 +1,9 @@
 "use server";
 
-import { type LoginResponse } from "~/lib/types/auth";
+import { type LoginResponse } from "~/app/lib/types/auth";
 import { type LoginFormValues } from "../components/LogInDialog";
 import { type SignUpFormValues } from "../components/SignUpDialog";
-import { createSession } from "~/lib/session";
-import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 
 const BASE_URL = "https://backend.tukma.work";
 
@@ -34,7 +33,7 @@ export async function signup(data: SignUpFormValues) {
     }
 
     const credentials = { email: data.email, password: data.password };
-    await login(credentials);
+    return await login(credentials);
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);
@@ -56,6 +55,7 @@ export async function login(data: LoginFormValues) {
         email: data.email,
         password: data.password,
       }),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -65,18 +65,52 @@ export async function login(data: LoginFormValues) {
       throw new Error("Failed to log in");
     }
 
-    // console.log(response);
+    // Get the JWT from the Set-Cookie header
+    const setCookieHeader = response.headers.get("set-cookie");
+    console.log("Set-Cookie header:", setCookieHeader);
 
-    // const { token, expiresIn, username } =
-    //   (await response.json()) as LoginResponse;
+    if (setCookieHeader) {
+      // Find the jwt cookie
+      const jwtCookie = setCookieHeader
+        .split(", ")
+        .find((cookie) => cookie.startsWith("jwt="));
 
-    // await createSession(username, token, expiresIn);
+      if (jwtCookie) {
+        // Parse out the JWT value and attributes
+        const [cookieValue, ...cookieAttributes] = jwtCookie.split("; ");
+        const jwt = cookieValue.split("=")[1];
 
-    console.log("Redirecting to dashboard...");
-    redirect("/dashboard");
+        console.log("Found JWT:", jwt);
+        console.log("Cookie attributes:", cookieAttributes);
+
+        // Set the cookie using Next.js
+        cookies().set("jwt", jwt, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+        });
+      }
+    }
+
+    return { success: true };
   } catch (error) {
     if (error instanceof Error) {
-      console.log(error.message);
+      console.log("Login error:", error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function logout() {
+  try {
+    console.log("Logging out...");
+    await deleteSession();
+    return { success: true };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log("Logout error:", error.message);
       return { success: false, error: error.message };
     }
     return { success: false, error: "An unexpected error occurred" };

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +33,8 @@ const loginSchema = z.object({
 export type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LogInDialog() {
+  const router = useRouter();
+  const [error, setError] = React.useState<string | null>(null);
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -39,6 +42,15 @@ export function LogInDialog() {
       password: "",
     },
   });
+
+  const onSubmit = async (data: LoginFormValues) => {
+    const result = await login(data);
+    if (result.success) {
+      router.push("/dashboard");
+    } else {
+      setError(result.error ?? "An error occurred during login");
+    }
+  };
 
   return (
     <Dialog>
@@ -54,8 +66,11 @@ export function LogInDialog() {
             Enter your credentials to access your account.
           </DialogDescription>
         </DialogHeader>
+        {error && (
+          <div className="text-primary-300 text-sm font-medium">{error}</div>
+        )}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(login)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"
