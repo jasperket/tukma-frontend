@@ -91,6 +91,7 @@ export async function login(data: LoginFormValues) {
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           path: "/",
+          maxAge: 86400,
         });
       }
     }
@@ -112,6 +113,10 @@ export async function logout() {
     return { success: true };
   } catch (error) {
     console.error("Logout error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "An unexpected error occurred" };
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
   }
 }
