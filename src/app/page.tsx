@@ -1,7 +1,7 @@
 import Image from "next/image";
 import logo from "../../public/logo.png";
-import { LogInDialog } from "./components/LogInDialog";
-import { SignUpDialog } from "./components/SignUpDialog";
+import AuthDialog from "./components/AuthDialog";
+import { Button } from "~/components/ui/button";
 
 export default function HomePage() {
   return (
@@ -10,13 +10,24 @@ export default function HomePage() {
       <div className="mx-auto max-w-7xl">
         <header className="flex items-center justify-between pt-8">
           <Image src={logo} alt="Tukma Logo" className="h-12 w-auto" />
-          <div>
-            <LogInDialog />
-            <SignUpDialog />
+          <div className="flex items-center gap-4">
+            <AuthDialog defaultTab="login">
+              <Button className="bg-primary-300 hover:bg-primary-400">
+                Log in
+              </Button>
+            </AuthDialog>
+            <AuthDialog defaultTab="signup">
+              <Button
+                variant="link"
+                className="text-text-200 hover:text-text-100"
+              >
+                Sign up
+              </Button>
+            </AuthDialog>
           </div>
         </header>
         <main className="flex min-h-[700px] flex-col items-center justify-center text-center">
-          <h1 className="text-text-100 font-serif text-6xl font-bold">
+          <h1 className="font-serif text-6xl font-bold text-text-100">
             We make work <span className="text-primary-300">work</span>.
           </h1>
           <div className="p-2"></div>
