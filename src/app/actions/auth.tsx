@@ -1,10 +1,11 @@
 "use server";
 
-import { type LoginResponse } from "~/app/lib/types/auth";
-import { type LoginFormValues } from "../components/LogInDialog";
-import { type SignUpFormValues } from "../components/SignUpDialog";
 import { cookies } from "next/headers";
 import { deleteSession } from "../lib/session";
+import {
+  type SignUpFormValues,
+  type LoginFormValues,
+} from "../components/AuthDialog";
 
 const BASE_URL = "https://backend.tukma.work";
 
@@ -21,6 +22,7 @@ export async function signup(data: SignUpFormValues) {
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
+        applicant: data.applicant,
       }),
     });
 

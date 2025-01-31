@@ -44,7 +44,7 @@ const signUpSchema = z.object({
     ),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  isInterviewer: z.boolean().default(false),
+  applicant: z.boolean().default(true),
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
@@ -79,7 +79,7 @@ export default function AuthDialog({
       password: "",
       firstName: "",
       lastName: "",
-      isInterviewer: false,
+      applicant: true,
     },
   });
 
@@ -308,12 +308,12 @@ export default function AuthDialog({
                 />
                 <FormField
                   control={signUpForm.control}
-                  name="isInterviewer"
+                  name="applicant"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border border-background-800 p-4">
                       <div className="space-y-0.5">
                         <FormLabel className="text-text-200">
-                          Are you an interviewer?
+                          I am an applicant
                         </FormLabel>
                       </div>
                       <FormControl>
