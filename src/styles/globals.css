@@ -4,7 +4,66 @@
 @layer base {
   :root {
     --radius: 0.5rem;
+    --m: 10;
+    --wavefreq: calc(100ms * var(--m));
   }
+}
+
+#wave {
+  display: flex;
+  gap: 8px;
+  height: 32px;
+}
+
+[class*='wave'] {
+  aspect-ratio: .125/1;
+  /*This can all be written on one line:*/
+  animation: waveform var(--wavefreq)
+             ease-in-out infinite
+             forwards;
+  background-color: #8b5a41;
+  border-radius: 15px;
+  width: 8px;
+}
+
+@keyframes waveform {
+  0% {
+    transform: scaleY(.5);
+  }
+  50% {
+    transform: scaleY(1.5);
+  }
+  100% {
+    transform: scaleY(.5);
+  }
+}
+
+.wave0 {
+  --wavefreq: calc(100ms * var(--m));
+}
+
+.wave1 {
+  --wavefreq: calc(125ms * var(--m));
+}
+
+.wave2 {
+  --wavefreq: calc(150ms * var(--m));
+}
+
+.wave3 {
+  --wavefreq: calc(175ms * var(--m));
+}
+
+.wave4 {
+  --wavefreq: calc(200ms * var(--m));
+}
+
+.wave5 {
+  --wavefreq: calc(225ms * var(--m));
+}
+
+.wave6 {
+  --wavefreq: calc(250ms * var(--m));
 }
 
 /*
