@@ -9,7 +9,7 @@ interface UploadResult {
   error?: string;
 }
 
-export async function uploadAudio(audio: Float32Array): Promise<UploadResult> {
+export async function uploadAudio(audio: Float32Array) {
   try {
     // Encode audio to WAV format
     const wavData = await WavEncoder.encode({
@@ -29,7 +29,7 @@ export async function uploadAudio(audio: Float32Array): Promise<UploadResult> {
     });
 
     // Parse the response
-    const result: UploadResult = await response.json();
+    const result = await response.json() as UploadResult;
 
     if (response.ok) {
       console.log(`Success: ${result.message}. File saved at: ${result.file_path}`);
