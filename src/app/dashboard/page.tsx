@@ -6,7 +6,7 @@ import { LogOutButton } from "./components/LogOutButton";
 import Button from "./components/Button";
 import { UploadIcon } from "lucide-react";
 import { Card } from "~/components/ui/card";
-import { useMicVAD, utils } from "@ricky0123/vad-react";
+import { useMicVAD } from "@ricky0123/vad-react";
 import { uploadAudio } from "../actions/applicant";
 
 export default function DashboardPage() {

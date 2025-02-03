@@ -1,31 +1,42 @@
-const WavEncoder = require("wav-encoder");
+import * as WavEncoder from "wav-encoder"; // Use ES6 import syntax
+
 const BASE_URL = "http://localhost:5000";
 
-export async function uploadAudio(audio: any) {
+interface UploadResult {
+  success: boolean;
+  message?: string;
+  file_path?: string;
+  error?: string;
+}
+
+export async function uploadAudio(audio: Float32Array): Promise<UploadResult> {
   try {
-    const wav_data = await WavEncoder.encode({
+    // Encode audio to WAV format
+    const wavData = await WavEncoder.encode({
       sampleRate: 16000,
       channelData: [audio],
     });
 
-    const blob = new Blob([wav_data], {type: "audio/wav"});
+    // Create a Blob from the encoded WAV data
+    const blob = new Blob([wavData], { type: "audio/wav" });
     const formData = new FormData();
     formData.append("file", blob, "audio.wav");
 
-    console.log(blob);
+    // Send the file to the server
     const response = await fetch(`${BASE_URL}/upload`, {
       method: "POST",
       body: formData,
     });
 
+    // Parse the response
     const result = await response.json();
 
     if (response.ok) {
-      console.log(
-        `Success: ${result.message}. File saved at: ${result.file_path}`,
-      );
+      console.log(`Success: ${result.message}. File saved at: ${result.file_path}`);
+      return { success: true, message: result.message, file_path: result.file_path };
     } else {
       console.log(`Error: ${result.error}`);
+      return { success: false, error: result.error };
     }
   } catch (error) {
     if (error instanceof Error) {
