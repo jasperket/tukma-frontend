@@ -29,7 +29,7 @@ export async function uploadAudio(audio: Float32Array): Promise<UploadResult> {
     });
 
     // Parse the response
-    const result = await response.json();
+    const result: UploadResult = await response.json();
 
     if (response.ok) {
       console.log(`Success: ${result.message}. File saved at: ${result.file_path}`);
