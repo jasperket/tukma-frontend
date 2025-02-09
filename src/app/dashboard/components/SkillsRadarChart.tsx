@@ -37,15 +37,15 @@ export default function SkillsRadarChart() {
   return (
     <Card>
       <CardHeader className="items-center">
-        <CardTitle>Skills Analysis</CardTitle>
+        <CardTitle className="text-xl text-text-100">Skills Analysis</CardTitle>
         <CardDescription className="text-text-400">
-          Upload your resume to see your skills profile
+          Upload a resume to see the skill profile
         </CardDescription>
       </CardHeader>
       <CardContent className="pb-4">
         <ChartContainer
           config={chartConfig}
-          className="aspect-square max-h-[200px] w-full"
+          className="aspect-square max-h-[350px] w-full"
         >
           <RadarChart data={skillsData}>
             <ChartTooltip

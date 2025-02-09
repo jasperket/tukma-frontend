@@ -45,16 +45,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-6">
+          <div className="flex items-center space-y-6">
             {/* Interview Transcript Card */}
-            <Card>
+            <Card className="w-full">
               <CardHeader>
-                <CardTitle className="text-text-100">
-                  Interview Transcript
+                <CardTitle className="text-xl text-text-100">
+                  Interview
                 </CardTitle>
-                <CardDescription className="text-text-400">
-                  Real-time transcription of your interview
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-[400px] rounded-lg border border-background-800 bg-background-950 p-4">

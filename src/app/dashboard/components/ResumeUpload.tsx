@@ -103,10 +103,7 @@ export default function ResumeUpload({ onUploadSuccess }: ResumeUploadProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-text-100">Resume Upload</CardTitle>
-        <CardDescription className="text-text-400">
-          Upload your resume to analyze your skills
-        </CardDescription>
+        <CardTitle className="text-xl text-text-100">Resume Analysis</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleFileUpload} className="space-y-4">
