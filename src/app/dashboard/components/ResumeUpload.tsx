@@ -28,9 +28,6 @@ async function uploadResume(
     method: "POST",
     body: arg,
     credentials: "include",
-    headers: {
-      Accept: "application/json",
-    },
   });
 
   console.log("Response:", response);
@@ -71,6 +68,7 @@ export default function ResumeUpload({ onUploadSuccess }: ResumeUploadProps) {
 
     const formData = new FormData(event.target);
     const file = formData.get("resume") as File | null;
+    const keywords = formData.get("keywords") as string;
 
     if (!file) {
       setError("Please select a file");
@@ -82,10 +80,17 @@ export default function ResumeUpload({ onUploadSuccess }: ResumeUploadProps) {
       return;
     }
 
-    // Add keywords to FormData (required by the API)
-    formData.append("keyword", "java");
-    formData.append("keyword", "python");
-    formData.append("keyword", "javascript");
+    if (!keywords.trim()) {
+      setError("Please enter at least one keyword");
+      return;
+    }
+
+    // Split keywords and add them to FormData
+    const keywordArray = keywords.split(", ").filter((k) => k.trim());
+    keywordArray.forEach((keyword) => {
+      console.log(keyword);
+      formData.append("keyword", keyword.trim());
+    });
 
     try {
       const result = await trigger(formData);
@@ -105,6 +110,20 @@ export default function ResumeUpload({ onUploadSuccess }: ResumeUploadProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleFileUpload} className="space-y-4">
+          <div className="grid w-full items-center gap-1.5">
+            <Label htmlFor="keywords" className="text-text-200">
+              Keywords
+            </Label>
+            <Input
+              id="keywords"
+              name="keywords"
+              type="text"
+              placeholder="java, python, javascript"
+              className="border-background-800 bg-background-950 text-text-100 placeholder:text-text-400"
+              disabled={isMutating}
+            />
+          </div>
+
           <div className="grid w-full items-center gap-1.5">
             <Label htmlFor="resume" className="text-text-200">
               Choose a file

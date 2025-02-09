@@ -45,7 +45,7 @@ export default function SkillsRadarChart() {
       <CardContent className="pb-4">
         <ChartContainer
           config={chartConfig}
-          className="aspect-square max-h-[350px] w-full"
+          className="aspect-square max-h-[200px] w-full"
         >
           <RadarChart data={skillsData}>
             <ChartTooltip
@@ -66,9 +66,6 @@ export default function SkillsRadarChart() {
           </RadarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex items-center justify-center text-sm text-text-400">
-        No resume analyzed yet
-      </CardFooter>
     </Card>
   );
 }
