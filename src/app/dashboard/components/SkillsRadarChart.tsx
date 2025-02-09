@@ -38,7 +38,7 @@ export default function SkillsRadarChart() {
     <Card>
       <CardHeader className="items-center">
         <CardTitle>Skills Analysis</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-text-400">
           Upload your resume to see your skills profile
         </CardDescription>
       </CardHeader>

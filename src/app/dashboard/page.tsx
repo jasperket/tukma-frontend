@@ -1,9 +1,9 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Image from "next/image";
 import logo from "../../../public/logo.png";
 import { LogOutButton } from "./components/LogOutButton";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 import {
   Card,
   CardContent,
@@ -13,8 +13,16 @@ import {
 } from "~/components/ui/card";
 import MicButton from "./components/MicButton";
 import SkillsRadarChart from "./components/SkillsRadarChart";
+import ResumeUpload from "./components/ResumeUpload";
 
 export default function DashboardPage() {
+  const [resumeHash, setResumeHash] = useState<string | null>(null);
+
+  const handleUploadSuccess = (hash: string) => {
+    setResumeHash(hash);
+    console.log("Resume uploaded successfully, hash:", hash);
+  };
+
   return (
     <>
       <div className="bg-primary-300 pt-1"></div>
@@ -30,25 +38,7 @@ export default function DashboardPage() {
           {/* Left Column */}
           <div className="space-y-6">
             {/* Resume Upload Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Resume Upload</CardTitle>
-                <CardDescription>
-                  Upload your resume to analyze your skills
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid w-full items-center gap-1.5">
-                  <Label htmlFor="resume">Choose a file</Label>
-                  <Input
-                    id="resume"
-                    type="file"
-                    className="cursor-pointer"
-                    accept=".pdf,.doc,.docx"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <ResumeUpload onUploadSuccess={handleUploadSuccess} />
 
             {/* Skills Analysis Card */}
             <SkillsRadarChart />
@@ -59,14 +49,16 @@ export default function DashboardPage() {
             {/* Interview Transcript Card */}
             <Card>
               <CardHeader>
-                <CardTitle>Interview Transcript</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-text-100">
+                  Interview Transcript
+                </CardTitle>
+                <CardDescription className="text-text-400">
                   Real-time transcription of your interview
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border-input h-[400px] rounded-lg border bg-background-950 p-4">
-                  <p className="text-muted-foreground text-sm">
+                <div className="h-[400px] rounded-lg border border-background-800 bg-background-950 p-4">
+                  <p className="text-sm text-text-400">
                     Start the interview to see the transcript
                   </p>
                 </div>
