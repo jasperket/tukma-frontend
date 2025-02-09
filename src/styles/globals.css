@@ -15,12 +15,10 @@
   height: 32px;
 }
 
-[class*='wave'] {
-  aspect-ratio: .125/1;
+[class*="wave"] {
+  aspect-ratio: 0.125/1;
   /*This can all be written on one line:*/
-  animation: waveform var(--wavefreq)
-             ease-in-out infinite
-             forwards;
+  animation: waveform var(--wavefreq) ease-in-out infinite forwards;
   background-color: #8b5a41;
   border-radius: 15px;
   width: 8px;
@@ -28,13 +26,13 @@
 
 @keyframes waveform {
   0% {
-    transform: scaleY(.5);
+    transform: scaleY(0.5);
   }
   50% {
     transform: scaleY(1.5);
   }
   100% {
-    transform: scaleY(.5);
+    transform: scaleY(0.5);
   }
 }
 
