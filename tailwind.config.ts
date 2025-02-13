@@ -16,6 +16,7 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
+        muted: '#e0e0e0', // Light mode
         text: {
           50: "#100e09",
           100: "#201c13",
