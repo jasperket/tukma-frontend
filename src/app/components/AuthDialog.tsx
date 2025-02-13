@@ -26,7 +26,7 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { login, signup } from "../actions/auth";
+import { checkUser, login, signup } from "../actions/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -89,7 +89,9 @@ export default function AuthDialog({
 
     try {
       const result = await login(data);
+      const isRecruiter = await checkUser();
       if (result.success) {
+        localStorage.setItem("isRecruiter", JSON.stringify(isRecruiter));
         setOpen(false);
         router.push("/dashboard");
       } else {

@@ -14,6 +14,7 @@ export function LogOutButton() {
     try {
       const result = await logout();
       if (result.success) {
+        localStorage.clear();
         router.refresh();
         router.push("/");
       }

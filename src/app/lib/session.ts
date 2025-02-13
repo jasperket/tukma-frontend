@@ -24,7 +24,7 @@ export async function createSession(
     sameSite: "lax",
     path: "/",
   });
-}
+  }
 
 export async function deleteSession() {
   const cookieStore = await cookies();
