@@ -7,6 +7,21 @@ import {
   type LoginFormValues,
 } from "../components/AuthDialog";
 
+interface UserDetails {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  recruiter: boolean;
+  accountNonExpired: boolean;
+  accountNonLocked: boolean;
+  credentialsNonExpired: boolean;
+}
+
+interface UserDetailsWrapper {
+  userDetails: UserDetails;
+}
+
 const BASE_URL = "https://backend.tukma.work";
 
 export async function signup(data: SignUpFormValues) {
@@ -146,7 +161,7 @@ export async function checkUser() {
     }
 
     // Parse the JSON response
-    const json = await response.json();
+    const json= await response.json() as UserDetailsWrapper;
 
     console.log("User details:", json);
 

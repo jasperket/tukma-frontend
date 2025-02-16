@@ -8,6 +8,7 @@ export default function DashboardPage() {
   const [isRecruiter, setIsRecruiter] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // TODO Error handling when localStorage does not exist
     const isRecruiter = localStorage.getItem("isRecruiter") === "true";
     setIsRecruiter(isRecruiter);
   }, []);

@@ -89,7 +89,7 @@ export default function AuthDialog({
 
     try {
       const result = await login(data);
-      const isRecruiter = await checkUser();
+      const isRecruiter = await checkUser() as boolean;
       if (result.success) {
         localStorage.setItem("isRecruiter", JSON.stringify(isRecruiter));
         setOpen(false);
