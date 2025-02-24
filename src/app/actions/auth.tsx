@@ -161,11 +161,21 @@ export async function checkUser() {
     }
 
     // Parse the JSON response
-    const json= await response.json() as UserDetailsWrapper;
+    const json = (await response.json()) as UserDetailsWrapper;
+    const isRecruiter = json.userDetails.recruiter;
 
     console.log("User details:", json);
 
-    return json.userDetails.recruiter;
+    // Store the user type in a cookie
+    cookieStore.set("userType", isRecruiter ? "recruiter" : "applicant", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 86400, // 24 hours
+    });
+
+    return isRecruiter;
   } catch (error) {
     console.error("Failed to check user status: ", error);
     return {
