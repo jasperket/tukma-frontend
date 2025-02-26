@@ -1,9 +1,17 @@
 "use server";
 
 import { cookies } from "next/headers";
-import type { CreateJobFormValues, Job } from "../dashboard/components/Employer";
+import type { Job } from "../dashboard/components/Employer";
 
 const BASE_URL = "https://backend.tukma.work/api/v1/jobs/";
+
+export interface CreateJobFormValues {
+  jobTitle: string;
+  jobDescription: string;
+  jobType: string;
+  shiftType: string;
+  shiftLengthHours: number;
+}
 
 export async function fetchJobs() {
   try {
@@ -31,7 +39,7 @@ export async function fetchJobs() {
 
     return json;
   } catch (error) {
-    console.error("Failed to check user status: ", error);
+    console.error("Failed to fetch jobs: ", error);
     return {
       success: false,
       error:
@@ -56,6 +64,9 @@ export async function createJob(data: CreateJobFormValues) {
       body: JSON.stringify({
         title: data.jobTitle,
         description: data.jobDescription,
+        type: data.jobType,
+        shiftType: data.shiftType,
+        shiftLengthHours: data.shiftLengthHours
       }),
     });
 
@@ -70,7 +81,7 @@ export async function createJob(data: CreateJobFormValues) {
     const json = await response.json() as Job;
     console.log(json);
 
-    return { success: true };
+    return { success: true, job: json };
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);
