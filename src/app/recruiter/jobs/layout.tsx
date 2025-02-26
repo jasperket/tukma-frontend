@@ -9,7 +9,13 @@ export default function RecruiterLayout({
       <div className="bg-primary-300 pt-1"></div>
       <div className="mx-auto max-w-7xl">
         <header className="flex items-center justify-between pt-8">
-          <Image src={"/logo.png"} alt="Tukma Logo" className="h-12 w-auto" />
+          <Image
+            src={"/logo.png"}
+            alt="Tukma Logo"
+            width={990}
+            height={245}
+            className="h-8 w-auto"
+          />
           <div>
             <LogOutButton />
           </div>
