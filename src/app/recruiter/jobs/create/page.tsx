@@ -11,15 +11,9 @@ import {
 } from "~/components/ui/card";
 import Link from "next/link";
 import { createJob } from "~/app/actions/employer";
+import { JOB_TYPES, SHIFT_TYPES, formatDisplayName } from "~/app/lib/constants/job-metadata";
 
-// Define job types and shift types directly from the API documentation
-const JOB_TYPES = ["FULL_TIME", "PART_TIME", "INTERNSHIP", "CONTRACT"];
-const SHIFT_TYPES = [
-  "DAY_SHIFT",
-  "NIGHT_SHIFT",
-  "ROTATING_SHIFT",
-  "FLEXIBLE_SHIFT",
-];
+
 
 // Zod schema for form validation
 const createJobSchema = z.object({
@@ -40,13 +34,7 @@ const createJobSchema = z.object({
     .max(24, "Shift length cannot exceed 24 hours"),
 });
 
-// Format display names for dropdown options
-const formatDisplayName = (value: string) => {
-  return value
-    .split("_")
-    .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
-    .join(" ");
-};
+
 
 export default function CreateJobPage() {
   async function handleSubmit(formData: FormData) {

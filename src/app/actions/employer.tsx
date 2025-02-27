@@ -2,14 +2,15 @@
 
 import { cookies } from "next/headers";
 import type { Job } from "../dashboard/components/Employer";
+import type { JobType, ShiftType } from "../lib/constants/job-metadata";
 
 const BASE_URL = "https://backend.tukma.work/api/v1/jobs/";
 
 export interface CreateJobFormValues {
   jobTitle: string;
   jobDescription: string;
-  jobType: string;
-  shiftType: string;
+  jobType: JobType | string;
+  shiftType: ShiftType | string;
   shiftLengthHours: number;
 }
 
