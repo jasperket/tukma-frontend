@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { getUserType } from "./lib/session";
 
-const protectedRoutes = ["/dashboard"];
+const protectedRoutes = ["/applicant", "/recruiter"];
 const publicRoutes = ["/"];
 
 export default async function middleware(req: NextRequest) {
@@ -17,9 +18,29 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.nextUrl));
   }
 
-  // Redirect to dashboard if trying to access public route while authenticated
-  if (isPublicRoute && jwt && !req.nextUrl.pathname.startsWith("/dashboard")) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+  // If the user is authenticated, get their role
+  if (jwt) {
+    const userType = await getUserType();
+
+    // Redirect to the appropriate dashboard if trying to access a public route while authenticated
+    if (isPublicRoute) {
+      if (userType! === "applicant") {
+        return NextResponse.redirect(
+          new URL("/applicant", req.nextUrl),
+        );
+      } else if (userType === "recruiter") {
+        return NextResponse.redirect(
+          new URL("/recruiter/jobs", req.nextUrl),
+        );
+      }
+    }
+
+    // Protect nested routes based on user type
+    if (userType === "applicant" && !path.startsWith("/applicant")) {
+      return NextResponse.rewrite(new URL("/404", req.nextUrl));
+    } else if (userType === "recruiter" && !path.startsWith("/recruiter")) {
+      return NextResponse.rewrite(new URL("/404", req.nextUrl));
+    }
   }
 
   return NextResponse.next();

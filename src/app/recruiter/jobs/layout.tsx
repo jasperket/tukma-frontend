@@ -1,4 +1,4 @@
-import { LogOutButton } from "~/app/dashboard/components/LogOutButton";
+import { LogOutButton } from "~/app/applicant/components/LogOutButton";
 import Image from "next/image";
 
 export default function RecruiterLayout({

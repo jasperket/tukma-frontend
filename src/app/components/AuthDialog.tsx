@@ -89,11 +89,9 @@ export default function AuthDialog({
 
     try {
       const result = await login(data);
-      const isRecruiter = await checkUser() as boolean;
       if (result.success) {
-        localStorage.setItem("isRecruiter", JSON.stringify(isRecruiter));
         setOpen(false);
-        router.push("/dashboard");
+        router.push("/");
       } else {
         setError(result.error ?? "An error occurred during login");
       }

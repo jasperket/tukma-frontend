@@ -15,9 +15,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      {isRecruiter === false && <ApplicantPage />}
-      {isRecruiter === true && <EmployerPage />}
-      {isRecruiter === null && <div>Loading...</div>}
+      <ApplicantPage />
     </>
   );
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import type { Job } from "../dashboard/components/Employer";
+import type { Job } from "../applicant/components/Employer";
 
 const BASE_URL = "https://backend.tukma.work/api/v1/jobs/";
 
