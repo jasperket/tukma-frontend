@@ -73,23 +73,23 @@ function CreateJobs() {
     },
   });
 
-  const onSubmit = async (data: CreateJobFormValues) => {
-    setIsLoading(true); // Set loading state to true
+  // const onSubmit = async (data: CreateJobFormValues) => {
+  //   setIsLoading(true); // Set loading state to true
 
-    try {
-      const result = await createJob(data); // Wait for the job creation to complete
-      setSuccess(result.success); // Set success state with the result
-    } catch (error) {
-      console.error("Error creating job:", error); // Handle any errors
-      setSuccess(false); // Optionally, set success to false if there's an error
-    } finally {
-      setIsLoading(false); // Ensure loading state is set to false, regardless of success or failure
-    }
+  //   try {
+  //     const result = await createJob(data); // Wait for the job creation to complete
+  //     setSuccess(result.success); // Set success state with the result
+  //   } catch (error) {
+  //     console.error("Error creating job:", error); // Handle any errors
+  //     setSuccess(false); // Optionally, set success to false if there's an error
+  //   } finally {
+  //     setIsLoading(false); // Ensure loading state is set to false, regardless of success or failure
+  //   }
 
-    setTimeout(() => {
-      setSuccess(undefined);
-    }, 3000);
-  };
+  //   setTimeout(() => {
+  //     setSuccess(undefined);
+  //   }, 3000);
+  // };
 
   return (
     <>
@@ -100,7 +100,7 @@ function CreateJobs() {
         <CardContent>
           <FormProvider {...createJobForm}>
             <form
-              onSubmit={createJobForm.handleSubmit(onSubmit)}
+              // onSubmit={createJobForm.handleSubmit(onSubmit)}
               className="space-y-4"
             >
               <FormField
@@ -192,7 +192,7 @@ function ShowJobs() {
   useEffect(() => {
     const fetch = async () => {
       const result = await fetchJobs();
-  
+
       // Check if the result is an array of jobs
       if (Array.isArray(result)) {
         setJobs(result); // Set the jobs state
@@ -202,7 +202,7 @@ function ShowJobs() {
         setJobs(undefined); // Optionally set jobs to undefined or an empty array
       }
     };
-  
+
     fetch();
 
     fetch();
