@@ -110,10 +110,18 @@ export async function login(data: LoginFormValues) {
           path: "/",
           maxAge: 86400,
         });
+
+        const isRecruiter = await checkUser();
+        // Store the user type in a cookie
+        cookieStore.set("userType", isRecruiter ? "recruiter" : "applicant", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 86400, // 24 hours
+        });
       }
     }
-
-    checkUser();
 
     return { success: true };
   } catch (error) {
@@ -165,15 +173,6 @@ export async function checkUser() {
     const isRecruiter = json.userDetails.recruiter;
 
     console.log("User details:", json);
-
-    // Store the user type in a cookie
-    cookieStore.set("userType", isRecruiter ? "recruiter" : "applicant", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 86400, // 24 hours
-    });
 
     return isRecruiter;
   } catch (error) {
