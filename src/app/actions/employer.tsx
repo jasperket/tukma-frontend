@@ -2,15 +2,14 @@
 
 import { cookies } from "next/headers";
 import type { Job } from "../dashboard/components/Employer";
-import type { JobType, ShiftType } from "../lib/constants/job-metadata";
 
 const BASE_URL = "https://backend.tukma.work/api/v1/jobs/";
 
 export interface CreateJobFormValues {
   jobTitle: string;
   jobDescription: string;
-  jobType: JobType | string;
-  shiftType: ShiftType | string;
+  jobType: string;
+  shiftType: string;
   shiftLengthHours: number;
 }
 
@@ -35,7 +34,7 @@ export async function fetchJobs() {
     }
 
     // Parse the JSON response
-    const json: Job[] = await response.json() as Job[];
+    const json: Job[] = (await response.json()) as Job[];
     console.log(json);
 
     return json;
@@ -67,7 +66,7 @@ export async function createJob(data: CreateJobFormValues) {
         description: data.jobDescription,
         type: data.jobType,
         shiftType: data.shiftType,
-        shiftLengthHours: data.shiftLengthHours
+        shiftLengthHours: data.shiftLengthHours,
       }),
     });
 
@@ -79,7 +78,7 @@ export async function createJob(data: CreateJobFormValues) {
     }
 
     // Parse the JSON response
-    const json = await response.json() as Job;
+    const json = (await response.json()) as Job;
     console.log(json);
 
     return { success: true, job: json };
