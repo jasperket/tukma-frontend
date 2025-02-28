@@ -24,7 +24,7 @@ export default async function middleware(req: NextRequest) {
 
     // Redirect to the appropriate dashboard if trying to access a public route while authenticated
     if (isPublicRoute) {
-      if (userType! === "applicant") {
+      if (userType === "applicant") {
         return NextResponse.redirect(
           new URL("/applicant", req.nextUrl),
         );
