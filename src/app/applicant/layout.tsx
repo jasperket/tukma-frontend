@@ -1,5 +1,5 @@
 import { LogOutButton } from "~/app/applicant/components/LogOutButton";
-import logo from "../../../public/logo.png";
+import logo from "~/../public/logo.png";
 import Image from "next/image";
 
 export default function ApplicantLayout({
