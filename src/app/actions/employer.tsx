@@ -1,7 +1,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-import type { Job } from "../applicant/components/Employer";
 
 const BASE_URL = "https://backend.tukma.work/api/v1/jobs/";
 
@@ -11,6 +10,25 @@ export interface CreateJobFormValues {
   jobType: string;
   shiftType: string;
   shiftLengthHours: number;
+}
+
+export interface Job {
+  id: number;
+  owner: Owner;
+  description: string;
+  title: string;
+  accessKey: string;
+}
+
+export interface Owner {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  recruiter: boolean;
+  accountNonExpired: boolean;
+  accountNonLocked: boolean;
+  credentialsNonExpired: boolean;
 }
 
 export async function fetchJobs() {
