@@ -37,6 +37,7 @@ export interface User {
   firstName: string;
   lastName: string;
   isRecruiter: boolean;
+  companyName: string;
 }
 
 export interface JobPaginated {
@@ -66,7 +67,7 @@ export interface Pagination {
   hasNextPage: boolean;
 }
 
-export interface GetJobsOwnerResponse {
+export interface GetJobsResponse {
   jobs: JobWithKeywords[];
   pagination: Pagination;
 }
@@ -183,16 +184,19 @@ export async function deleteJob(accessKey: string) {
   }
 }
 
-async function getPaginatedJobsRecruiter(page = 0, size = 10): Promise<GetJobsOwnerResponse> {
+export async function getJobsRecruiter(
+  page = 0,
+  size = 10,
+): Promise<GetJobsResponse> {
   const url = `/api/v1/jobs/get-jobs-owner?page=${page}&size=${size}`;
 
   try {
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Cookie: `jwt=${cookie?.value}`,
       },
     });
@@ -201,10 +205,37 @@ async function getPaginatedJobsRecruiter(page = 0, size = 10): Promise<GetJobsOw
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data: GetJobsOwnerResponse = await response.json() as GetJobsOwnerResponse;
+    const data: GetJobsResponse = (await response.json()) as GetJobsResponse;
     return data;
   } catch (error) {
-    console.error('Error fetching paginated jobs:', error);
+    console.error("Error fetching paginated jobs:", error);
+    throw error;
+  }
+}
+
+export async function getJobsApplicant(
+  page = 0,
+  size = 10,
+): Promise<GetJobsResponse> {
+  const url = `/api/v1/jobs/get-all-jobs?page=${page}&size=${size}`;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Explicitly type the response to avoid `any`
+    const data: GetJobsResponse = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching all jobs:", error);
     throw error;
   }
 }
