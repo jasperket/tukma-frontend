@@ -18,12 +18,14 @@ import {
 import Link from "next/link";
 import {
   deleteJob,
-  getJobsApplicant,
   getJobsRecruiter,
   GetJobsResponse,
+  JobWithKeywords,
 } from "../actions/recruiter";
 import { format } from "date-fns";
 import DeleteJobDialog from "~/app/components/DeleteDialog";
+import { useRouter } from "next/navigation";
+import { create } from "zustand";
 
 // Format date to a more readable format
 const formatDate = (dateString: string): string => {
@@ -42,7 +44,19 @@ const formatJobType = (type: string): string => {
     .replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
+type JobStore = {
+  jobData: JobWithKeywords | null;
+  setJobInfoData: (data: JobWithKeywords) => void;
+};
+
+export const useJobStore = create<JobStore>((set) => ({
+  jobData: null,
+  setJobInfoData: (data) => set({ jobData: data }),
+}));
+
 export default function JobsPage() {
+  const router = useRouter();
+  const setJobInfoData = useJobStore((state) => state.setJobInfoData);
   const [jobData, setJobData] = useState<GetJobsResponse | undefined>();
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
@@ -101,6 +115,11 @@ export default function JobsPage() {
     setJobData(response);
   };
 
+  const handleViewJob = (object: JobWithKeywords) => {
+    setJobInfoData(object);
+    router.push(`/recruiter/view/${object.job.accessKey}`);
+  };
+
   return (
     <>
       <div className="p-6"></div>
@@ -135,7 +154,7 @@ export default function JobsPage() {
         {/* Job Listings */}
         <div className="mb-8 space-y-4">
           {jobData !== undefined && jobData.jobs.length > 0 ? (
-            jobData!.jobs.map((item) => (
+            jobData.jobs.map((item) => (
               <div
                 key={item.job.id}
                 className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm"
@@ -193,6 +212,7 @@ export default function JobsPage() {
                     <button
                       className="flex flex-1 items-center justify-center rounded-md bg-[#e9e4d8] px-3 py-2 text-[#2d2418] transition-colors hover:bg-[#dfd9c9] lg:flex-none"
                       title="View Details"
+                      onClick={() => handleViewJob(item)}
                     >
                       <Eye className="mr-2 h-5 w-5 lg:mr-0" />
                       <span className="lg:hidden">View</span>
@@ -272,10 +292,11 @@ export default function JobsPage() {
           </div>
         )}
       </main>
+
       {/* Delete Confirmation Dialog */}
       <DeleteJobDialog
         isOpen={deleteDialogOpen}
-        jobTitle={jobToDelete?.title || ""}
+        jobTitle={jobToDelete?.title ?? ""}
         loading={loading}
         onClose={closeDeleteDialog}
         onConfirm={confirmDeleteJob}

@@ -84,7 +84,7 @@ export default function DeleteJobDialog({
           <p className="mb-2 text-[#2d2418]">
             Are you sure you want to delete this job?
           </p>
-          <p className="font-medium text-[#2d2418]">"{jobTitle}"</p>
+          <p className="font-medium text-[#2d2418]">{jobTitle}</p>
           <p className="mt-2 text-sm text-gray-600">
             This action cannot be undone. The job will be permanently removed
             from your account.
