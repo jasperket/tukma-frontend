@@ -28,19 +28,19 @@ export async function signup(data: SignUpFormValues) {
   try {
     console.log("Signing up...");
     // Prepare request body - add companyName for recruiters
-    const requestBody: Record<string, any> = {
+    const requestBody: Record<string, unknown> = {
       email: data.email,
       password: data.password,
       firstName: data.firstName,
       lastName: data.lastName,
       isApplicant: data.applicant,
     };
-    
+
     // Add companyName for recruiters
     if (!data.applicant && data.companyName) {
       requestBody.companyName = data.companyName;
     }
-    
+
     const response = await fetch(`${BASE_URL}/api/v1/auth/signup`, {
       method: "POST",
       headers: {
