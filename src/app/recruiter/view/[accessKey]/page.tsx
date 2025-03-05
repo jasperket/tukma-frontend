@@ -12,6 +12,7 @@ import { Button } from "~/components/ui/button";
 import { useJobStore } from "../../page";
 import { Badge } from "~/components/ui/badge";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // Format job type and shift type for display
 const formatJobType = (type: string) => {
@@ -41,7 +42,12 @@ const formatDate = (dateString: string) => {
 };
 
 export default function JobDetailsPage() {
+  const router = useRouter();
   const jobData = useJobStore((state) => state.jobData);
+
+  const handleEdit = () => {
+    router.push(`/recruiter/edit/${jobData?.job.accessKey}`);
+  };
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -177,6 +183,7 @@ export default function JobDetailsPage() {
               <Button
                 variant="outline"
                 className="flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
+                onClick={() => handleEdit()}
               >
                 Edit Job
               </Button>
