@@ -69,6 +69,7 @@ export interface JobPaginated {
   shiftLengthHours: number;
   createdAt: string;
   updatedAt: string;
+  locationType: string;
 }
 
 export interface JobWithKeywords {
@@ -101,6 +102,7 @@ interface CreateJobResponse {
   shiftLengthHours: number;
   createdAt: string;
   updatedAt: string;
+  keywords: string[];
 }
 
 export async function fetchJobs() {
@@ -269,10 +271,13 @@ export async function getJobsApplicant(
   const url = `get-all-jobs?page=${page}&size=${size}`;
 
   try {
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
     const response = await fetch(BASE_URL + url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        Cookie: `jwt=${cookie?.value}`,
       },
     });
 
@@ -286,5 +291,65 @@ export async function getJobsApplicant(
   } catch (error) {
     console.error("Error fetching all jobs:", error);
     throw error;
+  }
+}
+
+export async function editJob(data: CreateJobFormValues, accessKey: string) {
+  try {
+    console.log("Editing job...");
+
+    // transforming keywords to array
+    const keywords: string[] = data.keywords.split(" ");
+    const new_data = {
+      jobTitle: data.jobTitle,
+      jobDescription: data.jobDescription,
+      jobAddress: data.jobAddress,
+      jobType: data.jobType,
+      shiftType: data.shiftType,
+      shiftLengthHours: data.shiftLengthHours,
+      locationType: data.locationType,
+      keywords: keywords,
+    }
+
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+    const response = await fetch(`${BASE_URL}edit-job/${accessKey}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `jwt=${cookie?.value}`,
+      },
+      credentials: "include", // Include cookies in the request
+      body: JSON.stringify({
+        title: new_data.jobTitle,
+        description: new_data.jobDescription,
+        address: new_data.jobAddress,
+        type: new_data.jobType,
+        shiftType: new_data.shiftType,
+        shiftLengthHours: new_data.shiftLengthHours,
+        locationType: new_data.locationType,
+        keywords: new_data.keywords,
+      }),
+    });
+
+    console.log(response);
+
+    // Check if the response is OK (status code 200-299)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Parse the JSON response
+    const json = (await response.json()) as JobWithKeywords;
+    console.log(json);
+
+    return { success: true, job: json };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log(error);
+      console.log(error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
   }
 }

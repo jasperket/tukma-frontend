@@ -8,15 +8,10 @@ import {
   MapPin,
   User,
 } from "lucide-react";
-import { JobWithKeywords } from "~/app/actions/recruiter";
 import { Button } from "~/components/ui/button";
 import { useJobStore } from "../../page";
 import { Badge } from "~/components/ui/badge";
 import Link from "next/link";
-
-interface JobDetailsPageProps {
-  jobData: JobWithKeywords;
-}
 
 // Format job type and shift type for display
 const formatJobType = (type: string) => {

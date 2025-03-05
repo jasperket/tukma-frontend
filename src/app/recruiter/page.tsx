@@ -26,6 +26,7 @@ import { format } from "date-fns";
 import DeleteJobDialog from "~/app/components/DeleteDialog";
 import { useRouter } from "next/navigation";
 import { create } from "zustand";
+import { object } from "zod";
 
 // Format date to a more readable format
 const formatDate = (dateString: string): string => {
@@ -71,6 +72,7 @@ export default function JobsPage() {
     const fetchAPI = async () => {
       const response = await getJobsRecruiter();
       setJobData(response);
+      console.log(response);
     };
 
     fetchAPI();
@@ -118,6 +120,11 @@ export default function JobsPage() {
   const handleViewJob = (object: JobWithKeywords) => {
     setJobInfoData(object);
     router.push(`/recruiter/view/${object.job.accessKey}`);
+  };
+
+  const handleEditJob = (object: JobWithKeywords) => {
+    setJobInfoData(object);
+    router.push(`/recruiter/edit/${object.job.accessKey}`);
   };
 
   return (
@@ -220,6 +227,7 @@ export default function JobsPage() {
                     <button
                       className="flex flex-1 items-center justify-center rounded-md bg-[#e9e4d8] px-3 py-2 text-[#2d2418] transition-colors hover:bg-[#dfd9c9] lg:flex-none"
                       title="Edit Job"
+                      onClick={() => handleEditJob(item)}
                     >
                       <Pencil className="mr-2 h-5 w-5 lg:mr-0" />
                       <span className="lg:hidden">Edit</span>
