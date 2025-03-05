@@ -31,6 +31,46 @@ export interface Owner {
   credentialsNonExpired: boolean;
 }
 
+export interface User {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  isRecruiter: boolean;
+}
+
+export interface JobPaginated {
+  id: number;
+  owner: User;
+  description: string;
+  title: string;
+  address: string;
+  accessKey: string;
+  type: string;
+  shiftType: string;
+  shiftLengthHours: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JobWithKeywords {
+  job: JobPaginated;
+  keywords: string[];
+}
+
+export interface Pagination {
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNextPage: boolean;
+}
+
+export interface GetJobsOwnerResponse {
+  jobs: JobWithKeywords[];
+  pagination: Pagination;
+}
+
 export async function fetchJobs() {
   try {
     console.log("Fetching jobs...");
@@ -140,5 +180,31 @@ export async function deleteJob(accessKey: string) {
       return { success: false, error: error.message };
     }
     return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+async function getPaginatedJobsRecruiter(page = 0, size = 10): Promise<GetJobsOwnerResponse> {
+  const url = `/api/v1/jobs/get-jobs-owner?page=${page}&size=${size}`;
+
+  try {
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: `jwt=${cookie?.value}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data: GetJobsOwnerResponse = await response.json() as GetJobsOwnerResponse;
+    return data;
+  } catch (error) {
+    console.error('Error fetching paginated jobs:', error);
+    throw error;
   }
 }
