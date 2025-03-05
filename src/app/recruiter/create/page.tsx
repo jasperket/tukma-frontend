@@ -65,7 +65,7 @@ export default function CreateJobPage() {
 
     if (response.success) {
       // Redirect to the jobs list on success
-      redirect("/recruiter/jobs");
+      redirect("/recruiter");
     } else {
       // In a real app, you would handle errors better
       console.error("Failed to create job:", response.error);

@@ -124,7 +124,7 @@ export default function AuthDialog({
         if (data.applicant) {
           router.push("/applicant");
         } else {
-          router.push("/recruiter/jobs");
+          router.push("/recruiter");
         }
       } else {
         setError(result?.error ?? "An error occurred during signup");
