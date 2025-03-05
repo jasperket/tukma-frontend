@@ -58,7 +58,7 @@
   "ct3aMetadata": {
     "initVersion": "7.38.1"
   },
-  "packageManager": "pnpm@10.2.1",
+  "packageManager": "pnpm@10.5.2",
   "pnpm": {
     "ignoredBuiltDependencies": [
       "protobufjs",
