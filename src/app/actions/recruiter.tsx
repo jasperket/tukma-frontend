@@ -7,17 +7,26 @@ const BASE_URL = "https://backend.tukma.work/api/v1/jobs/";
 export interface CreateJobFormValues {
   jobTitle: string;
   jobDescription: string;
+  jobAddress: string;
   jobType: string;
   shiftType: string;
   shiftLengthHours: number;
+  locationType: string;
+  keywords: string;
 }
 
 export interface Job {
   id: number;
-  owner: Owner;
+  owner: User;
   description: string;
   title: string;
+  address: string;
   accessKey: string;
+  type: string;
+  shiftType: string;
+  shiftLengthHours: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Owner {
@@ -38,6 +47,14 @@ export interface User {
   lastName: string;
   isRecruiter: boolean;
   companyName: string;
+}
+
+export interface UserAlt {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  isRecruiter: boolean;
 }
 
 export interface JobPaginated {
@@ -72,6 +89,20 @@ export interface GetJobsResponse {
   pagination: Pagination;
 }
 
+interface CreateJobResponse {
+  id: number;
+  owner: UserAlt;
+  description: string;
+  title: string;
+  address: string;
+  accessKey: string;
+  type: string;
+  shiftType: string;
+  shiftLengthHours: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export async function fetchJobs() {
   try {
     console.log("Fetching jobs...");
@@ -93,7 +124,7 @@ export async function fetchJobs() {
     }
 
     // Parse the JSON response
-    const json: Job[] = (await response.json()) as Job[];
+    const json: GetJobsResponse = (await response.json()) as GetJobsResponse;
     console.log(json);
 
     return json;
@@ -111,6 +142,19 @@ export async function createJob(data: CreateJobFormValues) {
   try {
     console.log("Creating job...");
 
+    // transforming keywords to array
+    const keywords: string[] = data.keywords.split(" ");
+    const new_data = {
+      jobTitle: data.jobTitle,
+      jobDescription: data.jobDescription,
+      jobAddress: data.jobAddress,
+      jobType: data.jobType,
+      shiftType: data.shiftType,
+      shiftLengthHours: data.shiftLengthHours,
+      locationType: data.locationType,
+      keywords: keywords,
+    }
+
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");
     const response = await fetch(`${BASE_URL}create-job`, {
@@ -121,11 +165,14 @@ export async function createJob(data: CreateJobFormValues) {
       },
       credentials: "include", // Include cookies in the request
       body: JSON.stringify({
-        title: data.jobTitle,
-        description: data.jobDescription,
-        type: data.jobType,
-        shiftType: data.shiftType,
-        shiftLengthHours: data.shiftLengthHours,
+        title: new_data.jobTitle,
+        description: new_data.jobDescription,
+        address: new_data.jobAddress,
+        type: new_data.jobType,
+        shiftType: new_data.shiftType,
+        shiftLengthHours: new_data.shiftLengthHours,
+        locationType: new_data.locationType,
+        keywords: new_data.keywords,
       }),
     });
 
@@ -137,12 +184,13 @@ export async function createJob(data: CreateJobFormValues) {
     }
 
     // Parse the JSON response
-    const json = (await response.json()) as Job;
+    const json = (await response.json()) as CreateJobResponse;
     console.log(json);
 
     return { success: true, job: json };
   } catch (error) {
     if (error instanceof Error) {
+      console.log(error);
       console.log(error.message);
       return { success: false, error: error.message };
     }
@@ -188,12 +236,12 @@ export async function getJobsRecruiter(
   page = 0,
   size = 10,
 ): Promise<GetJobsResponse> {
-  const url = `/api/v1/jobs/get-jobs-owner?page=${page}&size=${size}`;
+  const url = `get-jobs-owner?page=${page}&size=${size}`;
 
   try {
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");
-    const response = await fetch(url, {
+    const response = await fetch(BASE_URL + url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -217,10 +265,10 @@ export async function getJobsApplicant(
   page = 0,
   size = 10,
 ): Promise<GetJobsResponse> {
-  const url = `/api/v1/jobs/get-all-jobs?page=${page}&size=${size}`;
+  const url = `get-all-jobs?page=${page}&size=${size}`;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(BASE_URL + url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

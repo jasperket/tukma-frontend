@@ -1,6 +1,18 @@
 // Constants for job types and shift types derived from the API documentation
-export const JOB_TYPES = ["FULL_TIME", "PART_TIME", "INTERNSHIP", "CONTRACT"] as const;
-export type JobType = typeof JOB_TYPES[number];
+export const JOB_TYPES = [
+  "FULL_TIME",
+  "PART_TIME",
+  "INTERNSHIP",
+  "CONTRACT",
+] as const;
+export type JobType = (typeof JOB_TYPES)[number];
+
+export const LOCATION_TYPES = [
+  "ON_SITE",
+  "ONLINE",
+  "HYBRID",
+] as const;
+export type LocationType = (typeof LOCATION_TYPES)[number];
 
 export const SHIFT_TYPES = [
   "DAY_SHIFT",
@@ -8,7 +20,7 @@ export const SHIFT_TYPES = [
   "ROTATING_SHIFT",
   "FLEXIBLE_SHIFT",
 ] as const;
-export type ShiftType = typeof SHIFT_TYPES[number];
+export type ShiftType = (typeof SHIFT_TYPES)[number];
 
 // Utility function to format display names for UI
 export function formatDisplayName(value: string): string {

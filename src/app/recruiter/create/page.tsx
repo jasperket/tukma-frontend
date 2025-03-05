@@ -11,14 +11,18 @@ import {
 } from "~/components/ui/card";
 import Link from "next/link";
 import { createJob } from "~/app/actions/recruiter";
-import { JOB_TYPES, SHIFT_TYPES, formatDisplayName } from "~/app/lib/constants/job-metadata";
-
-
+import {
+  JOB_TYPES,
+  SHIFT_TYPES,
+  LOCATION_TYPES,
+  formatDisplayName,
+} from "~/app/lib/constants/job-metadata";
 
 // Zod schema for form validation
 const createJobSchema = z.object({
   jobTitle: z.string().min(1, "Job title required"),
   jobDescription: z.string().min(1, "Job description required"),
+  jobAddress: z.string().min(1, "Cebu IT Park"),
   jobType: z.enum(["FULL_TIME", "PART_TIME", "INTERNSHIP", "CONTRACT"], {
     required_error: "Job type is required",
   }),
@@ -32,9 +36,11 @@ const createJobSchema = z.object({
     .number()
     .min(1, "Shift length must be at least 1 hour")
     .max(24, "Shift length cannot exceed 24 hours"),
+  locationType: z.enum(["ON_SITE", "ONLINE", "HYBRID"], {
+    required_error: "Shift type is required",
+  }),
+  keywords: z.string().optional().default(""),
 });
-
-
 
 export default function CreateJobPage() {
   async function handleSubmit(formData: FormData) {
@@ -44,9 +50,12 @@ export default function CreateJobPage() {
     const rawData = {
       jobTitle: formData.get("jobTitle") as string,
       jobDescription: formData.get("jobDescription") as string,
+      jobAddress: formData.get("jobAddress") as string,
       jobType: formData.get("jobType") as string,
       shiftType: formData.get("shiftType") as string,
       shiftLengthHours: Number(formData.get("shiftLengthHours")),
+      locationType: formData.get("locationType") as string,
+      keywords: formData.get("keywords") as string,
     };
 
     // Validate with Zod
@@ -131,6 +140,23 @@ export default function CreateJobPage() {
               />
             </div>
 
+            <div>
+              <label
+                htmlFor="jobAddress"
+                className="block text-sm font-medium text-text-200"
+              >
+                Address
+              </label>
+              <input
+                type="text"
+                id="jobAddress"
+                required
+                name="jobAddress"
+                placeholder="IT Park"
+                className="mt-1 block w-full rounded-md border border-background-800 bg-background-950 px-3 py-2 text-text-100 placeholder:text-text-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
+              />
+            </div>
+
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <label
@@ -177,26 +203,66 @@ export default function CreateJobPage() {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="shiftLengthHours"
+                  className="block text-sm font-medium text-text-200"
+                >
+                  Shift Length (hours)
+                </label>
+                <input
+                  type="number"
+                  id="shiftLengthHours"
+                  name="shiftLengthHours"
+                  required
+                  min={1}
+                  max={24}
+                  defaultValue={8}
+                  className="mt-1 block w-full rounded-md border border-background-800 bg-background-950 px-3 py-2 text-text-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
+                />
+                <p className="mt-2 text-sm text-text-400">
+                  Number of hours per shift
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="locationType"
+                  className="block text-sm font-medium text-text-200"
+                >
+                  Location Type
+                </label>
+                <select
+                  id="locationType"
+                  name="locationType"
+                  required
+                  defaultValue="DAY_SHIFT"
+                  className="mt-1 block w-full rounded-md border border-background-800 bg-background-950 px-3 py-2 text-text-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
+                >
+                  {LOCATION_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {formatDisplayName(type)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div>
               <label
-                htmlFor="shiftLengthHours"
+                htmlFor="keywords"
                 className="block text-sm font-medium text-text-200"
               >
-                Shift Length (hours)
+                Keywords
               </label>
               <input
-                type="number"
-                id="shiftLengthHours"
-                name="shiftLengthHours"
-                required
-                min={1}
-                max={24}
-                defaultValue={8}
-                className="mt-1 block w-full rounded-md border border-background-800 bg-background-950 px-3 py-2 text-text-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
+                type="text"
+                id="keywords"
+                name="keywords"
+                placeholder="java springboot backend frontend"
+                className="mt-1 block w-full rounded-md border border-background-800 bg-background-950 px-3 py-2 text-text-100 placeholder:text-text-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
               />
-              <p className="mt-2 text-sm text-text-400">
-                Number of hours per shift
-              </p>
             </div>
 
             <div className="flex justify-end space-x-4">

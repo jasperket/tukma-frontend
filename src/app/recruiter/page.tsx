@@ -1,10 +1,22 @@
-import React from "react";
+"use client";
+
+import React, { useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Search, Plus } from "lucide-react";
 import Link from "next/link";
+import { getJobsApplicant, getJobsRecruiter } from "../actions/recruiter";
 
 export default function JobsPage() {
+  useEffect(() => {
+    const fetchAPI = async () => {
+      const response = await getJobsRecruiter();
+      console.log(response);
+    };
+
+    fetchAPI();
+  }, []);
+
   return (
     <>
       <div className="p-6"></div>
