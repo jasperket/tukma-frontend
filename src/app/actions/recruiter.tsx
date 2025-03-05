@@ -266,7 +266,7 @@ export async function getJobsRecruiter(
 
 export async function getJobsApplicant(
   page = 0,
-  size = 10,
+  size = 5,
 ): Promise<GetJobsResponse> {
   const url = `get-all-jobs?page=${page}&size=${size}`;
 

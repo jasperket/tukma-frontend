@@ -112,7 +112,7 @@ export default function JobsPage() {
   const handlePageChange = async (pageNumber: number) => {
     setCurrentPage(pageNumber);
 
-    const response = await getJobsRecruiter(pageNumber, 1);
+    const response = await getJobsRecruiter(pageNumber, 5);
     setJobData(response);
   };
 
@@ -158,7 +158,7 @@ export default function JobsPage() {
         <div className="p-2"></div>
 
         {/* Job Listings */}
-        <div className="mb-8 space-y-4">
+        <div className="mb-2 space-y-4">
           {jobData !== undefined && jobData.jobs.length > 0 ? (
             jobData.jobs.map((item) => (
               <div
@@ -261,9 +261,9 @@ export default function JobsPage() {
 
         {/* Pagination */}
         {jobData !== undefined && jobData.pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pb-4">
             <div className="text-sm text-gray-600">
-              Showing {jobData.jobs.length} of{" "}
+              Showing {currentPage * 5 + 1} of{" "}
               {jobData.pagination.totalElements} jobs
             </div>
 
