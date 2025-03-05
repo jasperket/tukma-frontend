@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import Link from "next/link";
-import { editJob, JobWithKeywords } from "~/app/actions/recruiter";
+import { editJob } from "~/app/actions/recruiter";
 import {
   JOB_TYPES,
   SHIFT_TYPES,
@@ -74,7 +74,7 @@ export default function EditJobPage() {
     const data = result.data;
 
     // Call the createJob server action
-    const response = await editJob(data, jobData?.job.accessKey!);
+    const response = await editJob(data, jobData!.job.accessKey);
 
     if (response.success) {
       // Redirect to the jobs list on success

@@ -26,7 +26,6 @@ import { format } from "date-fns";
 import DeleteJobDialog from "~/app/components/DeleteDialog";
 import { useRouter } from "next/navigation";
 import { create } from "zustand";
-import { object } from "zod";
 
 // Format date to a more readable format
 const formatDate = (dateString: string): string => {
