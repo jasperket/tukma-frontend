@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import Link from "next/link";
-import { createJob } from "~/app/actions/employer";
+import { createJob } from "~/app/actions/recruiter";
 import { JOB_TYPES, SHIFT_TYPES, formatDisplayName } from "~/app/lib/constants/job-metadata";
 
 
