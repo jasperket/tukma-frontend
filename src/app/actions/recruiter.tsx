@@ -201,6 +201,7 @@ export async function createJob(data: CreateJobFormValues) {
 export async function deleteJob(accessKey: string) {
   try {
     console.log("Deleting job.");
+    console.log(accessKey);
 
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");
@@ -234,7 +235,7 @@ export async function deleteJob(accessKey: string) {
 
 export async function getJobsRecruiter(
   page = 0,
-  size = 10,
+  size = 5,
 ): Promise<GetJobsResponse> {
   const url = `get-jobs-owner?page=${page}&size=${size}`;
 

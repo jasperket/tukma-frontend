@@ -12,9 +12,12 @@ import {
   Eye,
   Pencil,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import {
+  deleteJob,
   getJobsApplicant,
   getJobsRecruiter,
   GetJobsResponse,
@@ -41,11 +44,13 @@ const formatJobType = (type: string): string => {
 
 export default function JobsPage() {
   const [jobData, setJobData] = useState<GetJobsResponse | undefined>();
-  const [page, setPage] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [jobToDelete, setJobToDelete] = useState<{
     id: number;
     title: string;
+    accessKey: string;
   } | null>(null);
 
   useEffect(() => {
@@ -58,8 +63,12 @@ export default function JobsPage() {
   }, []);
 
   // Open delete confirmation dialog
-  const openDeleteDialog = (jobId: number, jobTitle: string): void => {
-    setJobToDelete({ id: jobId, title: jobTitle });
+  const openDeleteDialog = (
+    jobId: number,
+    jobTitle: string,
+    accessKey: string,
+  ): void => {
+    setJobToDelete({ id: jobId, title: jobTitle, accessKey: accessKey });
     setDeleteDialogOpen(true);
   };
 
@@ -69,18 +78,27 @@ export default function JobsPage() {
   };
 
   // Handle job deletion after confirmation
-  const confirmDeleteJob = (): void => {
-    if (jobToDelete) {
-      const updatedJobs = jobData!.jobs.filter(
-        (item) => item.job.id !== jobToDelete.id,
-      );
-      const newJobData: GetJobsResponse = {
-        jobs: updatedJobs,
-        pagination: jobData!.pagination,
-      };
-      setJobData(newJobData);
-      closeDeleteDialog();
-    }
+  const confirmDeleteJob = async (): Promise<void> => {
+    setLoading(true);
+    const result = await deleteJob(jobToDelete!.accessKey);
+
+    const updatedJobs = jobData!.jobs.filter(
+      (item) => item.job.id !== jobToDelete!.id,
+    );
+    const newJobData: GetJobsResponse = {
+      jobs: updatedJobs,
+      pagination: jobData!.pagination,
+    };
+    setJobData(newJobData);
+    setLoading(false);
+    closeDeleteDialog();
+  };
+
+  const handlePageChange = async (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+
+    const response = await getJobsRecruiter(pageNumber, 1);
+    setJobData(response);
   };
 
   return (
@@ -191,7 +209,11 @@ export default function JobsPage() {
                       title="Delete Job"
                       // TODO
                       onClick={() =>
-                        openDeleteDialog(item.job.id, item.job.title)
+                        openDeleteDialog(
+                          item.job.id,
+                          item.job.title,
+                          item.job.accessKey,
+                        )
                       }
                     >
                       <Trash2 className="mr-2 h-5 w-5 lg:mr-0" />
@@ -211,23 +233,24 @@ export default function JobsPage() {
         </div>
 
         {/* Pagination */}
-        {/* {jobData.pagination.totalPages > 1 && (
-          <div className="flex justify-between items-center">
+        {jobData !== undefined && jobData.pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing {jobData.jobs.length} of {jobData.pagination.totalElements} jobs
+              Showing {jobData.jobs.length} of{" "}
+              {jobData.pagination.totalElements} jobs
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 0}
-                className={`p-2 rounded-md ${
+                className={`rounded-md p-2 ${
                   currentPage === 0
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    ? "cursor-not-allowed bg-gray-200 text-gray-400"
                     : "bg-[#e9e4d8] text-[#2d2418] hover:bg-[#dfd9c9]"
                 }`}
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
 
               <div className="text-sm">
@@ -237,22 +260,23 @@ export default function JobsPage() {
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={!jobData.pagination.hasNextPage}
-                className={`p-2 rounded-md ${
+                className={`rounded-md p-2 ${
                   !jobData.pagination.hasNextPage
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    ? "cursor-not-allowed bg-gray-200 text-gray-400"
                     : "bg-[#e9e4d8] text-[#2d2418] hover:bg-[#dfd9c9]"
                 }`}
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="h-5 w-5" />
               </button>
             </div>
           </div>
-        )} */}
+        )}
       </main>
       {/* Delete Confirmation Dialog */}
       <DeleteJobDialog
         isOpen={deleteDialogOpen}
         jobTitle={jobToDelete?.title || ""}
+        loading={loading}
         onClose={closeDeleteDialog}
         onConfirm={confirmDeleteJob}
       />
