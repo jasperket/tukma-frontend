@@ -29,7 +29,7 @@ export default function JobsPage() {
           </Button>
         </div>
         <div className="p-2"></div>
-        <Link href="/recruiter/jobs/create">
+        <Link href="/recruiter/create">
           <Button className="flex items-center gap-2 bg-primary-300 hover:bg-primary-400">
             <Plus className="h-4 w-4" />
             Create a Job

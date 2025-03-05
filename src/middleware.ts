@@ -30,7 +30,7 @@ export default async function middleware(req: NextRequest) {
         );
       } else if (userType === "recruiter") {
         return NextResponse.redirect(
-          new URL("/recruiter/jobs", req.nextUrl),
+          new URL("/recruiter", req.nextUrl),
         );
       }
     }

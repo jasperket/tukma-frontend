@@ -75,7 +75,7 @@ export default function CreateJobPage() {
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <Link href="/recruiter/jobs">
+        <Link href="/recruiter">
           <Button
             variant={"ghost"}
             className="flex items-center gap-2 text-text-200 hover:bg-background-800 hover:text-text-100"
@@ -200,7 +200,7 @@ export default function CreateJobPage() {
             </div>
 
             <div className="flex justify-end space-x-4">
-              <Link href="/recruiter/jobs">
+              <Link href="/recruiter">
                 <Button
                   type="button"
                   variant="outline"
