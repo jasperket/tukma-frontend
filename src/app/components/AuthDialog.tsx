@@ -140,7 +140,7 @@ export default function AuthDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
 
-      <DialogContent className="!top-[100px] !translate-y-0 bg-background-900 sm:max-w-[425px]">
+      <DialogContent className="bg-background-900 sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl text-text-100">
             Welcome to Tukma
