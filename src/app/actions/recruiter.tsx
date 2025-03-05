@@ -232,7 +232,7 @@ export async function getJobsApplicant(
     }
 
     // Explicitly type the response to avoid `any`
-    const data: GetJobsResponse = await response.json();
+    const data: GetJobsResponse = await response.json() as GetJobsResponse ;
     return data;
   } catch (error) {
     console.error("Error fetching all jobs:", error);
