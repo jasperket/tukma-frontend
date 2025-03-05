@@ -33,19 +33,29 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-const signUpSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z
-    .string()
-    .min(12, "Password must be at least 12 characters")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-    ),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  applicant: z.boolean().default(true),
-});
+const signUpSchema = z
+  .object({
+    email: z.string().email("Invalid email address"),
+    password: z
+      .string()
+      .min(12, "Password must be at least 12 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+      ),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    applicant: z.boolean().default(true),
+    companyName: z.string().optional(),
+  })
+  .refine(
+    (data) =>
+      data.applicant || (data.companyName && data.companyName.length > 0),
+    {
+      message: "Company name is required for recruiters",
+      path: ["companyName"],
+    },
+  );
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
@@ -80,6 +90,7 @@ export default function AuthDialog({
       firstName: "",
       lastName: "",
       applicant: true,
+      companyName: "",
     },
   });
 
@@ -110,7 +121,11 @@ export default function AuthDialog({
       const result = await signup(data);
       if (result?.success) {
         setOpen(false);
-        router.push("/dashboard");
+        if (data.applicant) {
+          router.push("/applicant");
+        } else {
+          router.push("/recruiter/jobs");
+        }
       } else {
         setError(result?.error ?? "An error occurred during signup");
       }
@@ -125,7 +140,7 @@ export default function AuthDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
 
-      <DialogContent className="bg-background-900 sm:max-w-[425px]">
+      <DialogContent className="!top-[100px] !translate-y-0 bg-background-900 sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl text-text-100">
             Welcome to Tukma
@@ -326,6 +341,33 @@ export default function AuthDialog({
                     </FormItem>
                   )}
                 />
+
+                {/* Company Name field - shown only when applicant is false */}
+                {!signUpForm.watch("applicant") && (
+                  <FormField
+                    control={signUpForm.control}
+                    name="companyName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-text-200">
+                          Company Name
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Acme Inc."
+                            {...field}
+                            disabled={isLoading}
+                            className="border-background-800 bg-background-950 text-text-100 placeholder:text-text-400"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-text-400">
+                          Required for recruiter accounts
+                        </FormDescription>
+                        <FormMessage className="text-primary-300" />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <Button
                   type="submit"
                   disabled={isLoading}
