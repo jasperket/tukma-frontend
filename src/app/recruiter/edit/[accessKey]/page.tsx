@@ -268,7 +268,7 @@ export default function EditJobPage() {
                 type="text"
                 id="keywords"
                 name="keywords"
-                defaultValue={jobData?.keywords.join(" ")}
+                defaultValue={jobData?.keywords.join(", ")}
                 placeholder="java springboot backend frontend"
                 className="mt-1 block w-full rounded-md border border-background-800 bg-background-950 px-3 py-2 text-text-100 placeholder:text-text-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
               />
