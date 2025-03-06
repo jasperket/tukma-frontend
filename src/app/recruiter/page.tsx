@@ -49,6 +49,7 @@ export default function JobsPage() {
   const setJobInfoData = useJobStore((state) => state.setJobInfoData);
   const [jobData, setJobData] = useState<GetJobsResponse | undefined>();
   const [currentPage, setCurrentPage] = useState<number>(0);
+  const [inputValue, setInputValue] = useState<string>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [jobToDelete, setJobToDelete] = useState<{
@@ -116,6 +117,10 @@ export default function JobsPage() {
     router.push(`/recruiter/edit/${object.job.accessKey}`);
   };
 
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(event.target.value);
+  };
+
   return (
     <>
       <div className="p-6"></div>
@@ -133,11 +138,9 @@ export default function JobsPage() {
               type="text"
               placeholder="Search jobs..."
               className="border-text-200 bg-background-950 pl-9 text-text-100 placeholder:text-text-400"
+              onChange={handleInputChange}
             />
           </div>
-          <Button className="bg-primary-300 hover:bg-primary-400">
-            Search
-          </Button>
           <Link href="/recruiter/create">
             <Button className="flex items-center gap-2 bg-primary-300 hover:bg-primary-400">
               <Plus className="h-4 w-4" />
@@ -150,7 +153,9 @@ export default function JobsPage() {
         {/* Job Listings */}
         <div className="mb-2 space-y-4">
           {jobData !== undefined && jobData.jobs.length > 0 ? (
-            jobData.jobs.map((item) => (
+            jobData.jobs
+            .filter((job) => job.job.title.toLowerCase().includes(inputValue.toLowerCase()))
+            .map((item) => (
               <div
                 key={item.job.id}
                 className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm"

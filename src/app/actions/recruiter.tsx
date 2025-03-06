@@ -301,7 +301,9 @@ export async function editJob(data: CreateJobFormValues, accessKey: string) {
     console.log("Editing job...");
 
     // transforming keywords to array
-    const keywords: string[] = data.keywords.split(" ");
+    const keywords: string[] = data.keywords
+      .replace(/, /g, ",")
+      .split(",");
     const new_data = {
       jobTitle: data.jobTitle,
       jobDescription: data.jobDescription,
