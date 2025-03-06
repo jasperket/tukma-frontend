@@ -27,6 +27,7 @@ export interface Job {
   shiftLengthHours: number;
   createdAt: string;
   updatedAt: string;
+  locationType: string;
 }
 
 export interface Owner {
@@ -90,6 +91,12 @@ export interface GetJobsResponse {
   pagination: Pagination;
 }
 
+export interface JobSearchResult {
+  job: Job;
+  keywords: string[];
+  relevanceScore: number;
+}
+
 interface CreateJobResponse {
   id: number;
   owner: UserAlt;
@@ -103,6 +110,11 @@ interface CreateJobResponse {
   createdAt: string;
   updatedAt: string;
   keywords: string[];
+}
+
+export interface JobSearchResponse {
+  jobs: JobSearchResult[];
+  pagination: Pagination;
 }
 
 export async function fetchJobs() {
@@ -145,9 +157,7 @@ export async function createJob(data: CreateJobFormValues) {
     console.log("Creating job...");
 
     // transforming keywords to array
-    const keywords: string[] = data.keywords
-      .replace(/, /g, ",")
-      .split(",");
+    const keywords: string[] = data.keywords.replace(/, /g, ",").split(",");
     const new_data = {
       jobTitle: data.jobTitle,
       jobDescription: data.jobDescription,
@@ -289,6 +299,7 @@ export async function getJobsApplicant(
 
     // Explicitly type the response to avoid `any`
     const data: GetJobsResponse = (await response.json()) as GetJobsResponse;
+    console.log(data);
     return data;
   } catch (error) {
     console.error("Error fetching all jobs:", error);
@@ -301,9 +312,7 @@ export async function editJob(data: CreateJobFormValues, accessKey: string) {
     console.log("Editing job...");
 
     // transforming keywords to array
-    const keywords: string[] = data.keywords
-      .replace(/, /g, ",")
-      .split(",");
+    const keywords: string[] = data.keywords.replace(/, /g, ",").split(",");
     const new_data = {
       jobTitle: data.jobTitle,
       jobDescription: data.jobDescription,
@@ -391,5 +400,35 @@ export async function getJobDetails(accessKey: string) {
       return { success: false, error: error.message };
     }
     return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function getSearchJob(
+  page = 0,
+  size = 10,
+  query: string,
+): Promise<JobSearchResponse> {
+  const url = `search?query=${query}&page=${page}&size=${size}`;
+
+  try {
+    const response = await fetch(BASE_URL + url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Explicitly type the response to avoid `any`
+    const data: JobSearchResponse = (await response.json()) as JobSearchResponse;
+    console.log(data);
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching all jobs:", error);
+    throw error;
   }
 }

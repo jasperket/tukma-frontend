@@ -3,27 +3,26 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   getJobsApplicant,
   GetJobsResponse,
+  getSearchJob,
+  JobSearchResponse,
   JobWithKeywords,
 } from "../actions/recruiter";
 import { useRouter } from "next/navigation";
 import { useJobStore } from "~/app/stores/useJobStore";
 import JobCard from "./components/JobCard";
-
-
+import Pagination from "./components/Pagination";
 
 export default function JobsPage() {
   const router = useRouter();
   const setJobInfoData = useJobStore((state) => state.setJobInfoData);
   const [jobData, setJobData] = useState<GetJobsResponse | undefined>();
+  const [searchData, setSearchData] = useState<JobSearchResponse | undefined>();
   const [currentPage, setCurrentPage] = useState<number>(0);
+  const [inputValue, setInputValue] = useState<string>("");
 
   useEffect(() => {
     const fetchAPI = async () => {
@@ -35,6 +34,22 @@ export default function JobsPage() {
     fetchAPI();
   }, []);
 
+  useEffect(() => {
+    if (inputValue.length === 0) {
+      setSearchData(undefined);
+      setCurrentPage(0);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      const response = await getSearchJob(currentPage, 10, inputValue);
+      setCurrentPage(0);
+      setSearchData(response);
+    }, 1000);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [inputValue]);
+
   const handlePageChange = async (pageNumber: number) => {
     setCurrentPage(pageNumber);
 
@@ -42,9 +57,20 @@ export default function JobsPage() {
     setJobData(response);
   };
 
+  const handleSearchPageChange = async (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+
+    const response = await getSearchJob(pageNumber, 10, inputValue);
+    setSearchData(response);
+  };
+
   const handleViewJob = (object: JobWithKeywords) => {
     setJobInfoData(object);
     router.push(`/applicant/view/${object.job.accessKey}`);
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(event.target.value);
   };
 
   return (
@@ -64,69 +90,59 @@ export default function JobsPage() {
               type="text"
               placeholder="Search jobs..."
               className="border-text-200 bg-background-950 pl-9 text-text-100 placeholder:text-text-400"
+              onChange={handleInputChange}
             />
           </div>
-          <Button className="bg-primary-300 hover:bg-primary-400">
-            Search
-          </Button>
         </div>
         <div className="p-2"></div>
 
         {/* Job Listings */}
         <div className="mb-2 space-y-4">
-          {jobData !== undefined && jobData.jobs.length > 0 ? (
-            jobData.jobs.map((item) => (
-              <JobCard 
-                key={item.job.id} 
-                job={item} 
-                onViewJob={handleViewJob} 
+          {searchData !== undefined &&
+            searchData.jobs.map((item) => (
+              <JobCard
+                key={item.job.id}
+                job={{ job: item.job, keywords: item.keywords }}
+                onViewJob={handleViewJob}
               />
-            ))
-          ) : (
+            ))}
+          {searchData !== undefined && searchData.jobs.length === 0 && (
             <div className="rounded-lg bg-white p-8 text-center shadow-sm">
-              <p className="text-gray-600">No jobs available</p>
+              <p className="text-gray-600">No jobs found</p>
             </div>
           )}
+          {searchData === undefined &&
+            jobData !== undefined &&
+            jobData.jobs.map((item) => (
+              <JobCard
+                key={item.job.id}
+                job={{ job: item.job, keywords: item.keywords }}
+                onViewJob={handleViewJob}
+              />
+            ))}
+          {searchData === undefined &&
+            jobData !== undefined &&
+            jobData.jobs.length === 0 && (
+              <div className="rounded-lg bg-white p-8 text-center shadow-sm">
+                <p className="text-gray-600">No jobs found</p>
+              </div>
+            )}
         </div>
 
         {/* Pagination */}
-        {jobData !== undefined && jobData.pagination.totalPages > 1 && (
-          <div className="mb-4 flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              Showing {currentPage * 10 + 1} of{" "}
-              {jobData.pagination.totalElements} jobs
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 0}
-                className={`rounded-md p-2 ${
-                  currentPage === 0
-                    ? "cursor-not-allowed bg-gray-200 text-gray-400"
-                    : "bg-[#e9e4d8] text-[#2d2418] hover:bg-[#dfd9c9]"
-                }`}
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-
-              <div className="text-sm">
-                Page {currentPage + 1} of {jobData.pagination.totalPages}
-              </div>
-
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={!jobData.pagination.hasNextPage}
-                className={`rounded-md p-2 ${
-                  !jobData.pagination.hasNextPage
-                    ? "cursor-not-allowed bg-gray-200 text-gray-400"
-                    : "bg-[#e9e4d8] text-[#2d2418] hover:bg-[#dfd9c9]"
-                }`}
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
+        {searchData === undefined && jobData !== undefined && (
+          <Pagination
+            currentPage={currentPage}
+            pagination={jobData?.pagination}
+            handlePageChange={handlePageChange}
+          />
+        )}
+        {searchData !== undefined && (
+          <Pagination
+            currentPage={currentPage}
+            pagination={searchData.pagination}
+            handlePageChange={handleSearchPageChange}
+          />
         )}
       </main>
     </>
