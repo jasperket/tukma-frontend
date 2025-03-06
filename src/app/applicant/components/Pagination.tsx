@@ -4,7 +4,7 @@ import type { Pagination } from "~/app/actions/recruiter";
 interface PaginationProps {
   pagination: Pagination;
   currentPage: number;
-  handlePageChange: Function;
+  handlePageChange: (page: number) => void;
 }
 
 const Pagination: React.FC<PaginationProps> = ({
