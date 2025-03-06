@@ -13,6 +13,8 @@ import { useJobStore } from "~/app/stores/useJobStore";
 import { Badge } from "~/components/ui/badge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getJobDetails, JobWithKeywords } from "~/app/actions/recruiter";
 
 // Format job type and shift type for display
 const formatJobType = (type: string) => {
@@ -44,15 +46,31 @@ const formatDate = (dateString: string) => {
 export default function JobDetailsPage() {
   const router = useRouter();
   const jobData = useJobStore((state) => state.jobData);
+  const setJobInfoData = useJobStore((state) => state.setJobInfoData);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const handleApply = () => {
     router.push(`/applicant/apply/${jobData?.job.accessKey}`);
   };
 
+  useEffect(() => {
+    async function fetchData() {
+      const accessKey = window.location.href.split("/").pop();
+      const response = await getJobDetails(accessKey!);
+      if (response.success) {
+        setJobInfoData(response.job!);
+      }
+      setLoading(false);
+    }
+
+    fetchData();
+  }, []);
+
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="rounded-lg bg-white p-6 shadow-sm">
-        {jobData === null && <div>No data</div>}
+        {jobData === null && !loading && <p>Invalid access key</p>}
+        {loading && <p>Loading...</p>}
         {jobData !== null && (
           <div className="space-y-6">
             {/* Job header */}

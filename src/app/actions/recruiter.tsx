@@ -155,7 +155,7 @@ export async function createJob(data: CreateJobFormValues) {
       shiftLengthHours: data.shiftLengthHours,
       locationType: data.locationType,
       keywords: keywords,
-    }
+    };
 
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");
@@ -286,7 +286,7 @@ export async function getJobsApplicant(
     }
 
     // Explicitly type the response to avoid `any`
-    const data: GetJobsResponse = await response.json() as GetJobsResponse ;
+    const data: GetJobsResponse = (await response.json()) as GetJobsResponse;
     return data;
   } catch (error) {
     console.error("Error fetching all jobs:", error);
@@ -309,7 +309,7 @@ export async function editJob(data: CreateJobFormValues, accessKey: string) {
       shiftLengthHours: data.shiftLengthHours,
       locationType: data.locationType,
       keywords: keywords,
-    }
+    };
 
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");
@@ -347,6 +347,42 @@ export async function editJob(data: CreateJobFormValues, accessKey: string) {
   } catch (error) {
     if (error instanceof Error) {
       console.log(error);
+      console.log(error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function getJobDetails(accessKey: string) {
+  try {
+    console.log("Fetching job details");
+
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+    const response = await fetch(`${BASE_URL}get-job-details/${accessKey}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `jwt=${cookie?.value}`,
+      },
+      credentials: "include", // Include cookies in the request
+    });
+
+    console.log(response);
+
+    // Check if the response is OK (status code 200-299)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Parse the JSON response
+    const json = (await response.json()) as JobWithKeywords;
+    console.log(json);
+
+    return { success: true, job: json };
+  } catch (error) {
+    if (error instanceof Error) {
       console.log(error.message);
       return { success: false, error: error.message };
     }
