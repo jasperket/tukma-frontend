@@ -256,7 +256,7 @@ export default function JobsPage() {
         {jobData !== undefined && jobData.pagination.totalPages > 1 && (
           <div className="flex items-center justify-between pb-4">
             <div className="text-sm text-gray-600">
-              Showing {currentPage * 5 + 1} of{" "}
+              Showing {currentPage * 10 + 1} of{" "}
               {jobData.pagination.totalElements} jobs
             </div>
 
