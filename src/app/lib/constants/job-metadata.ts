@@ -9,7 +9,7 @@ export type JobType = (typeof JOB_TYPES)[number];
 
 export const LOCATION_TYPES = [
   "ON_SITE",
-  "ONLINE",
+  "REMOTE",
   "HYBRID",
 ] as const;
 export type LocationType = (typeof LOCATION_TYPES)[number];

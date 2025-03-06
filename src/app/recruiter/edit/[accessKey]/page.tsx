@@ -39,7 +39,7 @@ const createJobSchema = z.object({
     .number()
     .min(1, "Shift length must be at least 1 hour")
     .max(24, "Shift length cannot exceed 24 hours"),
-  locationType: z.enum(["ON_SITE", "ONLINE", "HYBRID"], {
+  locationType: z.enum(["ON_SITE", "REMOTE", "HYBRID"], {
     required_error: "Shift type is required",
   }),
   keywords: z.string().optional().default(""),
