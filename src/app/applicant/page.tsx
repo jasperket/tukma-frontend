@@ -41,10 +41,12 @@ export default function JobsPage() {
       return;
     }
 
-    const delayDebounceFn = setTimeout(async () => {
-      const response = await getSearchJob(currentPage, 10, inputValue);
-      setCurrentPage(0);
-      setSearchData(response);
+    const delayDebounceFn = setTimeout(() => {
+      (async () => {
+        const response = await getSearchJob(currentPage, 10, inputValue);
+        setCurrentPage(0);
+        setSearchData(response);
+      })();
     }, 1000);
 
     return () => clearTimeout(delayDebounceFn);
@@ -98,35 +100,31 @@ export default function JobsPage() {
 
         {/* Job Listings */}
         <div className="mb-2 space-y-4">
-          {searchData !== undefined &&
-            searchData.jobs.map((item) => (
-              <JobCard
-                key={item.job.id}
-                job={{ job: item.job, keywords: item.keywords }}
-                onViewJob={handleViewJob}
-              />
-            ))}
-          {searchData !== undefined && searchData.jobs.length === 0 && (
+          {searchData?.jobs.map((item) => (
+            <JobCard
+              key={item.job.id}
+              job={{ job: item.job, keywords: item.keywords }}
+              onViewJob={handleViewJob}
+            />
+          ))}
+          {searchData?.jobs.length === 0 && (
             <div className="rounded-lg bg-white p-8 text-center shadow-sm">
               <p className="text-gray-600">No jobs found</p>
             </div>
           )}
-          {searchData === undefined &&
-            jobData !== undefined &&
-            jobData.jobs.map((item) => (
+          {!searchData &&
+            jobData?.jobs.map((item) => (
               <JobCard
                 key={item.job.id}
                 job={{ job: item.job, keywords: item.keywords }}
                 onViewJob={handleViewJob}
               />
             ))}
-          {searchData === undefined &&
-            jobData !== undefined &&
-            jobData.jobs.length === 0 && (
-              <div className="rounded-lg bg-white p-8 text-center shadow-sm">
-                <p className="text-gray-600">No jobs found</p>
-              </div>
-            )}
+          {!searchData && jobData?.jobs.length === 0 && (
+            <div className="rounded-lg bg-white p-8 text-center shadow-sm">
+              <p className="text-gray-600">No jobs found</p>
+            </div>
+          )}
         </div>
 
         {/* Pagination */}
