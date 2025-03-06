@@ -130,14 +130,17 @@ export default function JobDetailsPage() {
                 <div className="space-y-2">
                   <div className="font-medium text-[#3c3022]">Keywords:</div>
                   <div className="flex flex-wrap gap-2">
-                    {jobData.keywords.map((keyword: string, index: number) => (
-                      <Badge
-                        key={index}
-                        className="bg-[#e6e0cf] text-[#3c3022] hover:bg-[#d9d0b8]"
-                      >
-                        {keyword}
-                      </Badge>
-                    ))}
+                    {jobData.keywords.map(
+                      (keyword: string, index: number) =>
+                        keyword.length > 0 && (
+                          <Badge
+                            key={index}
+                            className="bg-[#e6e0cf] text-[#3c3022] hover:bg-[#d9d0b8]"
+                          >
+                            {keyword}
+                          </Badge>
+                        ),
+                    )}
                   </div>
                 </div>
               </div>

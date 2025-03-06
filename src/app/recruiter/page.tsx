@@ -177,14 +177,17 @@ export default function JobsPage() {
                     </div>
 
                     <div className="mb-4 flex flex-wrap gap-2">
-                      {item.keywords.map((keyword, idx) => (
-                        <span
-                          key={idx}
-                          className="rounded-full bg-[#e9e4d8] px-2 py-1 text-xs text-[#2d2418]"
-                        >
-                          {keyword}
-                        </span>
-                      ))}
+                      {item.keywords.map(
+                        (keyword, idx) =>
+                          keyword.length > 0 && (
+                            <span
+                              key={idx}
+                              className="rounded-full bg-[#e9e4d8] px-2 py-1 text-xs text-[#2d2418]"
+                            >
+                              {keyword}
+                            </span>
+                          ),
+                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600">

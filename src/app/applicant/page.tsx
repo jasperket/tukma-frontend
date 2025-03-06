@@ -121,14 +121,17 @@ export default function JobsPage() {
                     </div>
 
                     <div className="mb-4 flex flex-wrap gap-2">
-                      {item.keywords.map((keyword, idx) => (
-                        <span
-                          key={idx}
-                          className="rounded-full bg-[#e9e4d8] px-2 py-1 text-xs text-[#2d2418]"
-                        >
-                          {keyword}
-                        </span>
-                      ))}
+                      {item.keywords.map(
+                        (keyword, idx) =>
+                          keyword.length > 0 && (
+                            <span
+                              key={idx}
+                              className="rounded-full bg-[#e9e4d8] px-2 py-1 text-xs text-[#2d2418]"
+                            >
+                              {keyword}
+                            </span>
+                          ),
+                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600">
@@ -163,16 +166,14 @@ export default function JobsPage() {
             ))
           ) : (
             <div className="rounded-lg bg-white p-8 text-center shadow-sm">
-              <p className="text-gray-600">
-                No jobs available
-              </p>
+              <p className="text-gray-600">No jobs available</p>
             </div>
           )}
         </div>
 
         {/* Pagination */}
         {jobData !== undefined && jobData.pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <div className="text-sm text-gray-600">
               Showing {currentPage * 5 + 1} of{" "}
               {jobData.pagination.totalElements} jobs
@@ -210,7 +211,6 @@ export default function JobsPage() {
           </div>
         )}
       </main>
-
     </>
   );
 }
