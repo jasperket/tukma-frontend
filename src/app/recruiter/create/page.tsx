@@ -254,7 +254,7 @@ export default function CreateJobPage() {
                 htmlFor="keywords"
                 className="block text-sm font-medium text-text-200"
               >
-                Keywords
+                Keywords separated by commas
               </label>
               <input
                 type="text"

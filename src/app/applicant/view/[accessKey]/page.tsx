@@ -70,7 +70,7 @@ export default function JobDetailsPage() {
     <main className="container mx-auto px-4 py-8">
       <div className="rounded-lg bg-white p-6 shadow-sm">
         {jobData === null && !loading && <p>Invalid access key</p>}
-        {loading && <p>Loading...</p>}
+        {loading && jobData === null && <p>Loading...</p>}
         {jobData !== null && (
           <div className="space-y-6">
             {/* Job header */}
