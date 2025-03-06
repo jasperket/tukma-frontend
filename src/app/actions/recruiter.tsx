@@ -146,8 +146,7 @@ export async function createJob(data: CreateJobFormValues) {
 
     // transforming keywords to array
     const keywords: string[] = data.keywords
-      .replace(", ", " ")
-      .replace(",", " ")
+      .replace(/,/g, " ")
       .replace("  ", " ")
       .split(" ");
     const new_data = {
