@@ -38,7 +38,7 @@ export default function JobsPage() {
   const handlePageChange = async (pageNumber: number) => {
     setCurrentPage(pageNumber);
 
-    const response = await getJobsApplicant(pageNumber, 5);
+    const response = await getJobsApplicant(pageNumber, 10);
     setJobData(response);
   };
 
