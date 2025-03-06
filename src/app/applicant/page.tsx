@@ -19,7 +19,7 @@ import {
 } from "../actions/recruiter";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { create } from "zustand";
+import { useJobStore } from "~/app/stores/useJobStore";
 
 // Format date to a more readable format
 const formatDate = (dateString: string): string => {
@@ -37,16 +37,6 @@ const formatJobType = (type: string): string => {
     .toLowerCase()
     .replace(/\b\w/g, (l) => l.toUpperCase());
 };
-
-type JobStore = {
-  jobData: JobWithKeywords | null;
-  setJobInfoData: (data: JobWithKeywords) => void;
-};
-
-export const useJobStore = create<JobStore>((set) => ({
-  jobData: null,
-  setJobInfoData: (data) => set({ jobData: data }),
-}));
 
 export default function JobsPage() {
   const router = useRouter();

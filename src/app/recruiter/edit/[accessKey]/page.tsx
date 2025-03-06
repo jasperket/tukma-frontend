@@ -19,7 +19,7 @@ import {
   LOCATION_TYPES,
   formatDisplayName,
 } from "~/app/lib/constants/job-metadata";
-import { useJobStore } from "../../page";
+import { useJobStore } from "~/app/stores/useJobStore";
 
 // Zod schema for form validation
 const createJobSchema = z.object({

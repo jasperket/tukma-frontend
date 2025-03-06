@@ -11,8 +11,10 @@ import {
 import MicButton from "../../components/MicButton";
 import SkillsRadarChart from "../../components/SkillsRadarChart";
 import ResumeUpload from "../../components/ResumeUpload";
+import { useJobStore } from "~/app/stores/useJobStore";
 
 export default function ApplicantPage() {
+  const jobData = useJobStore((state) => state.jobData);
   const [resumeHash, setResumeHash] = useState<string | null>(null);
 
   const handleUploadSuccess = (hash: string) => {
