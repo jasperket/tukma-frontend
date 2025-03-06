@@ -145,7 +145,11 @@ export async function createJob(data: CreateJobFormValues) {
     console.log("Creating job...");
 
     // transforming keywords to array
-    const keywords: string[] = data.keywords.split(" ");
+    const keywords: string[] = data.keywords
+      .replace(", ", " ")
+      .replace(",", " ")
+      .replace("  ", "")
+      .split(" ");
     const new_data = {
       jobTitle: data.jobTitle,
       jobDescription: data.jobDescription,
@@ -237,7 +241,7 @@ export async function deleteJob(accessKey: string) {
 
 export async function getJobsRecruiter(
   page = 0,
-  size = 5,
+  size = 10,
 ): Promise<GetJobsResponse> {
   const url = `get-jobs-owner?page=${page}&size=${size}`;
 
@@ -266,7 +270,7 @@ export async function getJobsRecruiter(
 
 export async function getJobsApplicant(
   page = 0,
-  size = 5,
+  size = 10,
 ): Promise<GetJobsResponse> {
   const url = `get-all-jobs?page=${page}&size=${size}`;
 
