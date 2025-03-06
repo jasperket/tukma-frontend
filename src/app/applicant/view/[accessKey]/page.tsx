@@ -9,7 +9,7 @@ import {
   User,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { useJobStore } from "../../page";
+import { useJobStore } from "~/app/recruiter/page";
 import { Badge } from "~/components/ui/badge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
