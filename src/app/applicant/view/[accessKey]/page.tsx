@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getJobDetails, JobWithKeywords } from "~/app/actions/recruiter";
+import PDFUpload from "../../components/PDFUpload";
 
 // Format job type and shift type for display
 const formatJobType = (type: string) => {
@@ -48,6 +49,8 @@ export default function JobDetailsPage() {
   const jobData = useJobStore((state) => state.jobData);
   const setJobInfoData = useJobStore((state) => state.setJobInfoData);
   const [loading, setLoading] = useState<boolean>(true);
+  const [uploaded, setIsUploaded] = useState<boolean>(false);
+  const [accessKey, setAccessKey] = useState<string>("");
 
   const handleApply = () => {
     router.push(`/applicant/apply/${jobData?.job.accessKey}`);
@@ -56,6 +59,7 @@ export default function JobDetailsPage() {
   useEffect(() => {
     async function fetchData() {
       const accessKey = window.location.href.split("/").pop();
+      setAccessKey(accessKey!);
       const response = await getJobDetails(accessKey!);
       if (response.success) {
         setJobInfoData(response.job!);
@@ -65,6 +69,10 @@ export default function JobDetailsPage() {
 
     fetchData();
   }, []);
+
+  async function uploadFile() {
+
+  }
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -178,6 +186,9 @@ export default function JobDetailsPage() {
               </div>
             </div>
 
+            <div className="border-t border-[#e6e0cf]"></div>
+            <PDFUpload isUploaded={uploaded} setIsUploaded={setIsUploaded}/>
+
             {/* Action buttons */}
             <div className="flex gap-4 border-t border-[#e6e0cf] pt-4">
               <Link href="/" className="flex-1">
@@ -190,6 +201,7 @@ export default function JobDetailsPage() {
               </Link>
               <Button
                 variant="outline"
+                disabled={!uploaded}
                 className="flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
                 onClick={() => handleApply()}
               >
