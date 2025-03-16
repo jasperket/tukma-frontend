@@ -30,8 +30,6 @@ export default function ApplicantPage() {
           {/* Resume Upload Card */}
           <ResumeUpload onUploadSuccess={handleUploadSuccess} />
 
-          {/* Skills Analysis Card */}
-          <SkillsRadarChart />
         </div>
 
         {/* Right Column */}

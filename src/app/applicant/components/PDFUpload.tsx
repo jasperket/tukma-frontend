@@ -6,12 +6,17 @@ import { useState, useRef } from "react";
 import { Upload, FileText, Check, X, AlertCircle } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
+import { GetMyApplicationForJob } from "~/app/actions/resume";
 
 interface PDFUploadProps {
   label?: string;
   description?: string;
   maxSizeMB?: number;
   isUploaded?: boolean;
+  file: File | null | undefined;
+  application: GetMyApplicationForJob | null;
+  loading: boolean;
+  setFile: (file: File | null) => void;
   onFileUpload?: (file: File) => void;
   setIsUploaded: (uploaded: boolean) => void;
 }
@@ -21,10 +26,13 @@ export default function PDFUpload({
   description = "Please upload your resume in PDF format",
   maxSizeMB = 5,
   isUploaded,
+  file,
+  application,
+  loading,
+  setFile,
   onFileUpload,
   setIsUploaded,
 }: PDFUploadProps) {
-  const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -128,8 +136,9 @@ export default function PDFUpload({
               <Button
                 onClick={() => fileInputRef.current?.click()}
                 className="bg-[#8B6E4E] text-white hover:bg-[#6b5d4c]"
+                disabled={loading ? true : application !== null ? true : false}
               >
-                Browse Files
+                {application !== null ? "You have already uploaded" : "Browse Files"}
               </Button>
               <input
                 type="file"

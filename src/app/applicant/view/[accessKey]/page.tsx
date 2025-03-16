@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getJobDetails, JobWithKeywords } from "~/app/actions/recruiter";
 import PDFUpload from "../../components/PDFUpload";
+import { getJobApplication, GetMyApplicationForJob, uploadForJob } from "~/app/actions/resume";
 
 // Format job type and shift type for display
 const formatJobType = (type: string) => {
@@ -50,20 +51,23 @@ export default function JobDetailsPage() {
   const setJobInfoData = useJobStore((state) => state.setJobInfoData);
   const [loading, setLoading] = useState<boolean>(true);
   const [uploaded, setIsUploaded] = useState<boolean>(false);
-  const [accessKey, setAccessKey] = useState<string>("");
-
-  const handleApply = () => {
-    router.push(`/applicant/apply/${jobData?.job.accessKey}`);
-  };
+  const [file, setFile] = useState<File | null>();
+  const [application, setApplication] = useState<GetMyApplicationForJob | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       const accessKey = window.location.href.split("/").pop();
-      setAccessKey(accessKey!);
+
       const response = await getJobDetails(accessKey!);
       if (response.success) {
         setJobInfoData(response.job!);
       }
+
+      const applicationData = await getJobApplication(accessKey!);
+      if (applicationData.success) {
+        setApplication(applicationData.data!);
+      }
+
       setLoading(false);
     }
 
@@ -71,7 +75,35 @@ export default function JobDetailsPage() {
   }, []);
 
   async function uploadFile() {
+    if (application !== null) {
+      router.push(`/applicant/resume/${application.resume.resumeHash}`);
+      return;
+    }
 
+    if (!file) {
+      console.error("No file selected.");
+      return; // Exit early if no file is selected
+    }
+
+    if (!jobData?.keywords || !Array.isArray(jobData.keywords)) {
+      console.error("Invalid or missing keywords.");
+      return; // Exit early if keywords are invalid or missing
+    }
+
+    if (!jobData?.job?.accessKey) {
+      console.error("Invalid or missing access key.");
+      return; // Exit early if access key is invalid or missing
+    }
+
+    const response = await uploadForJob(
+      file,
+      jobData?.job.accessKey,
+    );
+
+    if (response.success) {
+      console.log("Resume uploaded successfully. Hash:", response.hash);
+      router.push(`/applicant/resume/${response.hash}`);
+    }
   }
 
   return (
@@ -187,7 +219,14 @@ export default function JobDetailsPage() {
             </div>
 
             <div className="border-t border-[#e6e0cf]"></div>
-            <PDFUpload isUploaded={uploaded} setIsUploaded={setIsUploaded}/>
+            <PDFUpload
+              file={file}
+              setFile={setFile}
+              isUploaded={uploaded}
+              setIsUploaded={setIsUploaded}
+              application={application}
+              loading={loading}
+            />
 
             {/* Action buttons */}
             <div className="flex gap-4 border-t border-[#e6e0cf] pt-4">
@@ -201,11 +240,11 @@ export default function JobDetailsPage() {
               </Link>
               <Button
                 variant="outline"
-                disabled={!uploaded}
+                disabled={loading ? true : !uploaded && application === null}
                 className="flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
-                onClick={() => handleApply()}
+                onClick={() => uploadFile()}
               >
-                Apply
+                {application !== null ? "View Result" : "Apply"}
               </Button>
             </div>
           </div>
