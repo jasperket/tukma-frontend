@@ -72,7 +72,7 @@ export default function JobDetailsPage() {
                   className="w-full flex-1 border-[#d9d0b8] bg-[#e6e0cf] text-[#3c3022] hover:bg-[#d9d0b8] hover:text-[#3c3022]"
                   onClick={() => handleBackward()}
                 >
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back to Jobs
+                  <ArrowLeft className="mr-2 h-4 w-4" /> View Job
                 </Button>
 
                 <Button
