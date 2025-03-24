@@ -11,7 +11,7 @@ export default async function middleware(req: NextRequest) {
 
   // Check for the jwt cookie
   const jwt = req.cookies.get("jwt");
-  console.log("JWT cookie:", jwt);
+  // console.log("JWT cookie:", jwt);
 
   // Redirect to home if trying to access protected route without auth
   if (isProtectedRoute && !jwt) {

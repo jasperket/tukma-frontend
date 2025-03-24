@@ -6,7 +6,11 @@ import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { uploadAudio } from "../../actions/applicant";
 
-export default function MicButton() {
+interface MicButtonProps {
+  uploadAudio: (audio: Float32Array<ArrayBufferLike>) => void;
+}
+
+export default function MicButton({uploadAudio}: MicButtonProps) {
   const vad = useMicVAD({
     startOnLoad: false,
     onSpeechEnd: (audio) => {
