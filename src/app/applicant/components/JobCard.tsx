@@ -14,6 +14,9 @@ const formatDate = (dateString: string): string => {
 
 // Format job type and shift type to be more readable
 const formatJobType = (type: string): string => {
+  // Add null/undefined check
+  if (!type) return '';
+  
   return type
     .replace(/_/g, " ")
     .toLowerCase()

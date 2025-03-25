@@ -20,6 +20,9 @@ import { getJobApplication, GetMyApplicationForJob, uploadForJob } from "~/app/a
 
 // Format job type and shift type for display
 const formatJobType = (type: string) => {
+  // Add null/undefined check
+  if (!type) return '';
+  
   return type
     .replace("_", " ")
     .toLowerCase()
@@ -27,6 +30,9 @@ const formatJobType = (type: string) => {
 };
 
 const formatShiftType = (type: string) => {
+  // Add null/undefined check
+  if (!type) return '';
+  
   return type
     .split("_")
     .map((word) => word.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase()))
