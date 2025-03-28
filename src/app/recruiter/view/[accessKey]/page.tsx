@@ -35,12 +35,8 @@ const formatDate = (dateString: string) => {
   });
 };
 
-interface PageProps {
-  params: { accessKey: string };
-}
-
-export default async function JobDetailsPage({ params }: PageProps) {
-  const accessKey = params.accessKey;
+export default async function JobDetailsPage({ params }: { params: Promise<{ accessKey: string }> }) {
+  const { accessKey } = await params;
   
   // Fetch data in parallel using existing server actions
   const [jobResponse, questions] = await Promise.all([
