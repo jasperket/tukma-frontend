@@ -7,6 +7,8 @@ import {
   Clock,
   MapPin,
   User,
+  MessageSquare,
+  Code
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { useJobStore } from "~/app/stores/useJobStore";
@@ -14,7 +16,7 @@ import { Badge } from "~/components/ui/badge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getJobDetails } from "~/app/actions/recruiter";
+import { getJobDetails, getJobQuestions } from "~/app/actions/recruiter";
 
 // Format job type and shift type for display
 const formatJobType = (type: string) => {
@@ -54,6 +56,13 @@ export default function JobDetailsPage() {
   const jobData = useJobStore((state) => state.jobData);
   const setJobInfoData = useJobStore((state) => state.setJobInfoData);
   const [loading, setLoading] = useState<boolean>(true);
+  const [questions, setQuestions] = useState<{
+    behavioral: string[];
+    technical: string[];
+  }>({
+    behavioral: [],
+    technical: [],
+  });
 
   const handleEdit = () => {
     router.push(`/recruiter/edit/${jobData?.job.accessKey}`);
@@ -61,11 +70,21 @@ export default function JobDetailsPage() {
 
   useEffect(() => {
     async function fetchData() {
+      // Get the access key from the URL
       const accessKey = window.location.href.split("/").pop();
+      
+      // Fetch job details
       const response = await getJobDetails(accessKey!);
       if (response.success) {
         setJobInfoData(response.job!);
       }
+
+      // Fetch job questions
+      if (accessKey) {
+        const questionsResponse = await getJobQuestions(accessKey);
+        setQuestions(questionsResponse);
+      }
+      
       setLoading(false);
     }
 
@@ -196,6 +215,54 @@ export default function JobDetailsPage() {
                 </div>
               </div>
             </div>
+
+            {/* Behavioral Questions */}
+            {questions.behavioral.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="flex items-center gap-2 text-xl font-semibold text-[#3c3022]">
+                  <MessageSquare className="h-5 w-5 text-[#8b6e4e]" />
+                  Behavioral Questions
+                </h2>
+                <div className="rounded-md bg-[#e6e0cf] p-4">
+                  <div className="space-y-3">
+                    {questions.behavioral.map((question, index) => (
+                      <div 
+                        key={`behavioral-${index}`} 
+                        className="rounded-md bg-white p-3"
+                      >
+                        <p className="text-[#3c3022]">
+                          {index + 1}. {question}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Technical Questions */}
+            {questions.technical.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="flex items-center gap-2 text-xl font-semibold text-[#3c3022]">
+                  <Code className="h-5 w-5 text-[#8b6e4e]" />
+                  Technical Questions
+                </h2>
+                <div className="rounded-md bg-[#e6e0cf] p-4">
+                  <div className="space-y-3">
+                    {questions.technical.map((question, index) => (
+                      <div 
+                        key={`technical-${index}`} 
+                        className="rounded-md bg-white p-3"
+                      >
+                        <p className="text-[#3c3022]">
+                          {index + 1}. {question}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Action buttons */}
             <div className="flex gap-4 border-t border-[#e6e0cf] pt-4">
