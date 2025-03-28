@@ -35,7 +35,11 @@ const formatDate = (dateString: string) => {
   });
 };
 
-export default async function JobDetailsPage({ params }: { params: { accessKey: string } }) {
+interface PageProps {
+  params: { accessKey: string };
+}
+
+export default async function JobDetailsPage({ params }: PageProps) {
   const accessKey = params.accessKey;
   
   // Fetch data in parallel using existing server actions
