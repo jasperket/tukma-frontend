@@ -13,6 +13,8 @@ export interface CreateJobFormValues {
   shiftLengthHours: number;
   locationType: string;
   keywords: string;
+  behavioralQuestions?: string[];
+  technicalQuestions?: string[];
 }
 
 export interface Job {
@@ -117,6 +119,14 @@ export interface JobSearchResponse {
   pagination: Pagination;
 }
 
+export interface Question {
+  id: number;
+  questionText: string;
+  type: "TECHNICAL" | "BEHAVIORAL";
+  createdAt: string;
+  updatedAt: string;
+}
+
 export async function fetchJobs() {
   try {
     console.log("Fetching jobs...");
@@ -156,13 +166,17 @@ export async function createJob(data: CreateJobFormValues) {
   try {
     console.log("Creating job...");
 
-    // transforming keywords to array
-    const keywords: string[] = data.keywords.replace(/, /g, ",").split(",");
+    // Transform keywords to array
+    const keywords: string[] = data.keywords
+      .replace(/, /g, ",")
+      .split(",")
+      .filter((k) => k.trim() !== "");
+
     const new_data = {
-      jobTitle: data.jobTitle,
-      jobDescription: data.jobDescription,
-      jobAddress: data.jobAddress,
-      jobType: data.jobType,
+      title: data.jobTitle,
+      description: data.jobDescription,
+      address: data.jobAddress,
+      type: data.jobType,
       shiftType: data.shiftType,
       shiftLengthHours: data.shiftLengthHours,
       locationType: data.locationType,
@@ -171,37 +185,57 @@ export async function createJob(data: CreateJobFormValues) {
 
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");
+
+    // First, create the job
     const response = await fetch(`${BASE_URL}create-job`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Cookie: `jwt=${cookie?.value}`,
       },
-      credentials: "include", // Include cookies in the request
-      body: JSON.stringify({
-        title: new_data.jobTitle,
-        description: new_data.jobDescription,
-        address: new_data.jobAddress,
-        type: new_data.jobType,
-        shiftType: new_data.shiftType,
-        shiftLengthHours: new_data.shiftLengthHours,
-        locationType: new_data.locationType,
-        keywords: new_data.keywords,
-      }),
+      credentials: "include",
+      body: JSON.stringify(new_data),
     });
 
-    console.log(response);
-
-    // Check if the response is OK (status code 200-299)
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error creating job! status: ${response.status}`);
     }
 
-    // Parse the JSON response
-    const json = (await response.json()) as CreateJobResponse;
-    console.log(json);
+    // Parse the JSON response for the created job
+    const jobResponse = (await response.json()) as CreateJobResponse;
+    console.log("Job created:", jobResponse);
 
-    return { success: true, job: json };
+    // Add behavioral questions if provided
+    if (data.behavioralQuestions && data.behavioralQuestions.length > 0) {
+      const filteredBehavioralQuestions = data.behavioralQuestions.filter(
+        (q) => q.trim() !== "",
+      );
+
+      if (filteredBehavioralQuestions.length > 0) {
+        await addQuestions(
+          jobResponse.accessKey,
+          filteredBehavioralQuestions,
+          "BEHAVIORAL",
+        );
+      }
+    }
+
+    // Add technical questions if provided
+    if (data.technicalQuestions && data.technicalQuestions.length > 0) {
+      const filteredTechnicalQuestions = data.technicalQuestions.filter(
+        (q) => q.trim() !== "",
+      );
+
+      if (filteredTechnicalQuestions.length > 0) {
+        await addQuestions(
+          jobResponse.accessKey,
+          filteredTechnicalQuestions,
+          "TECHNICAL",
+        );
+      }
+    }
+
+    return { success: true, job: jobResponse };
   } catch (error) {
     if (error instanceof Error) {
       console.log(error);
@@ -209,6 +243,116 @@ export async function createJob(data: CreateJobFormValues) {
       return { success: false, error: error.message };
     }
     return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+// Function to delete all questions for a job
+async function deleteAllQuestions(accessKey: string) {
+  try {
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+
+    const response = await fetch(`${BASE_URL}questions/${accessKey}/all`, {
+      method: "DELETE",
+      headers: {
+        Cookie: `jwt=${cookie?.value}`,
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok && response.status !== 404) {
+      // 404 is acceptable if no questions exist
+      throw new Error(
+        `HTTP error deleting questions! status: ${response.status}`,
+      );
+    }
+
+    console.log("All questions deleted successfully");
+    return true;
+  } catch (error) {
+    console.error("Error deleting questions:", error);
+    throw error;
+  }
+}
+
+// Function to get all questions for a job
+export async function getJobQuestions(accessKey: string) {
+  try {
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+
+    const response = await fetch(`${BASE_URL}questions/${accessKey}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `jwt=${cookie?.value}`,
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return { behavioral: [], technical: [] };
+      }
+      throw new Error(
+        `HTTP error getting questions! status: ${response.status}`,
+      );
+    }
+
+    const questions = (await response.json()) as Question[];
+
+    // Separate questions by type
+    const behavioral = questions
+      .filter((q) => q.type === "BEHAVIORAL")
+      .map((q) => q.questionText);
+    const technical = questions
+      .filter((q) => q.type === "TECHNICAL")
+      .map((q) => q.questionText);
+
+    return { behavioral, technical };
+  } catch (error) {
+    console.error("Error getting questions:", error);
+    return { behavioral: [], technical: [] };
+  }
+}
+
+// Helper function to add questions to a job
+async function addQuestions(
+  accessKey: string,
+  questions: string[],
+  type: "BEHAVIORAL" | "TECHNICAL",
+) {
+  try {
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+
+    const response = await fetch(`${BASE_URL}questions/${accessKey}/batch`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `jwt=${cookie?.value}`,
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        questions: questions,
+        type: type,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP error adding ${type} questions! status: ${response.status}`,
+      );
+    }
+
+    // Add explicit type to avoid 'any' assignment
+    const result = (await response.json()) as Question[];
+    console.log(`${type} questions added:`, result);
+
+    return result;
+  } catch (error) {
+    console.error(`Error adding ${type} questions:`, error);
+    throw error;
   }
 }
 
@@ -311,13 +455,17 @@ export async function editJob(data: CreateJobFormValues, accessKey: string) {
   try {
     console.log("Editing job...");
 
-    // transforming keywords to array
-    const keywords: string[] = data.keywords.replace(/, /g, ",").split(",");
+    // Transform keywords to array
+    const keywords: string[] = data.keywords
+      .replace(/, /g, ",")
+      .split(",")
+      .filter((k) => k.trim() !== "");
+
     const new_data = {
-      jobTitle: data.jobTitle,
-      jobDescription: data.jobDescription,
-      jobAddress: data.jobAddress,
-      jobType: data.jobType,
+      title: data.jobTitle,
+      description: data.jobDescription,
+      address: data.jobAddress,
+      type: data.jobType,
       shiftType: data.shiftType,
       shiftLengthHours: data.shiftLengthHours,
       locationType: data.locationType,
@@ -333,21 +481,9 @@ export async function editJob(data: CreateJobFormValues, accessKey: string) {
         Cookie: `jwt=${cookie?.value}`,
       },
       credentials: "include", // Include cookies in the request
-      body: JSON.stringify({
-        title: new_data.jobTitle,
-        description: new_data.jobDescription,
-        address: new_data.jobAddress,
-        type: new_data.jobType,
-        shiftType: new_data.shiftType,
-        shiftLengthHours: new_data.shiftLengthHours,
-        locationType: new_data.locationType,
-        keywords: new_data.keywords,
-      }),
+      body: JSON.stringify(new_data),
     });
 
-    console.log(response);
-
-    // Check if the response is OK (status code 200-299)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -355,6 +491,47 @@ export async function editJob(data: CreateJobFormValues, accessKey: string) {
     // Parse the JSON response
     const json = (await response.json()) as JobWithKeywords;
     console.log(json);
+
+    // Delete existing questions and add new ones if provided
+    if (data.behavioralQuestions?.length || data.technicalQuestions?.length) {
+      try {
+        // First delete all existing questions
+        await deleteAllQuestions(accessKey);
+
+        // Add behavioral questions if provided
+        if (data.behavioralQuestions && data.behavioralQuestions.length > 0) {
+          const filteredBehavioralQuestions = data.behavioralQuestions.filter(
+            (q) => q.trim() !== "",
+          );
+
+          if (filteredBehavioralQuestions.length > 0) {
+            await addQuestions(
+              accessKey,
+              filteredBehavioralQuestions,
+              "BEHAVIORAL",
+            );
+          }
+        }
+
+        // Add technical questions if provided
+        if (data.technicalQuestions && data.technicalQuestions.length > 0) {
+          const filteredTechnicalQuestions = data.technicalQuestions.filter(
+            (q) => q.trim() !== "",
+          );
+
+          if (filteredTechnicalQuestions.length > 0) {
+            await addQuestions(
+              accessKey,
+              filteredTechnicalQuestions,
+              "TECHNICAL",
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error updating questions:", error);
+        // Continue with the job update even if there's an error with questions
+      }
+    }
 
     return { success: true, job: json };
   } catch (error) {
@@ -423,7 +600,8 @@ export async function getSearchJob(
     }
 
     // Explicitly type the response to avoid `any`
-    const data: JobSearchResponse = (await response.json()) as JobSearchResponse;
+    const data: JobSearchResponse =
+      (await response.json()) as JobSearchResponse;
     console.log(data);
 
     return data;

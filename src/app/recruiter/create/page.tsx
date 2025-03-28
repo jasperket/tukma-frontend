@@ -1,6 +1,9 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useState } from "react";
+import { redirect, useRouter } from "next/navigation";
 import { z } from "zod";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, PlusCircle, X } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -40,11 +43,59 @@ const createJobSchema = z.object({
     required_error: "Shift type is required",
   }),
   keywords: z.string().optional().default(""),
+  behavioralQuestions: z.array(z.string()).optional(),
+  technicalQuestions: z.array(z.string()).optional(),
 });
 
 export default function CreateJobPage() {
-  async function handleSubmit(formData: FormData) {
-    "use server";
+  const router = useRouter();
+  const [behavioralQuestions, setBehavioralQuestions] = useState<string[]>([""]);
+  const [technicalQuestions, setTechnicalQuestions] = useState<string[]>([""]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle behavioral questions
+  const handleBehavioralQuestionChange = (index: number, value: string) => {
+    const updatedQuestions = [...behavioralQuestions];
+    updatedQuestions[index] = value;
+    setBehavioralQuestions(updatedQuestions);
+  };
+
+  const addBehavioralQuestion = () => {
+    setBehavioralQuestions([...behavioralQuestions, ""]);
+  };
+
+  const removeBehavioralQuestion = (index: number) => {
+    if (behavioralQuestions.length > 1) {
+      const updatedQuestions = [...behavioralQuestions];
+      updatedQuestions.splice(index, 1);
+      setBehavioralQuestions(updatedQuestions);
+    }
+  };
+
+  // Handle technical questions
+  const handleTechnicalQuestionChange = (index: number, value: string) => {
+    const updatedQuestions = [...technicalQuestions];
+    updatedQuestions[index] = value;
+    setTechnicalQuestions(updatedQuestions);
+  };
+
+  const addTechnicalQuestion = () => {
+    setTechnicalQuestions([...technicalQuestions, ""]);
+  };
+
+  const removeTechnicalQuestion = (index: number) => {
+    if (technicalQuestions.length > 1) {
+      const updatedQuestions = [...technicalQuestions];
+      updatedQuestions.splice(index, 1);
+      setTechnicalQuestions(updatedQuestions);
+    }
+  };
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
 
     // Extract and validate form data
     const rawData = {
@@ -56,6 +107,8 @@ export default function CreateJobPage() {
       shiftLengthHours: Number(formData.get("shiftLengthHours")),
       locationType: formData.get("locationType") as string,
       keywords: formData.get("keywords") as string,
+      behavioralQuestions: behavioralQuestions.filter(q => q.trim() !== ""),
+      technicalQuestions: technicalQuestions.filter(q => q.trim() !== ""),
     };
 
     // Validate with Zod
@@ -64,20 +117,27 @@ export default function CreateJobPage() {
     if (!result.success) {
       // In a real app, you might want to handle validation errors better
       console.error("Validation failed:", result.error);
+      setIsSubmitting(false);
       return;
     }
 
     const data = result.data;
 
-    // Call the createJob server action
-    const response = await createJob(data);
+    try {
+      // Call the createJob server action
+      const response = await createJob(data);
 
-    if (response.success) {
-      // Redirect to the jobs list on success
-      redirect("/recruiter/view/" + response.job?.accessKey);
-    } else {
-      // In a real app, you would handle errors better
-      console.error("Failed to create job:", response.error);
+      if (response.success) {
+        // Redirect to the jobs list on success
+        router.push("/recruiter/view/" + response.job?.accessKey);
+      } else {
+        // In a real app, you would handle errors better
+        console.error("Failed to create job:", response.error);
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setIsSubmitting(false);
     }
   }
 
@@ -105,7 +165,7 @@ export default function CreateJobPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="jobTitle"
@@ -237,7 +297,7 @@ export default function CreateJobPage() {
                   id="locationType"
                   name="locationType"
                   required
-                  defaultValue="DAY_SHIFT"
+                  defaultValue="ON_SITE"
                   className="mt-1 block w-full rounded-md border border-background-800 bg-background-950 px-3 py-2 text-text-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
                 >
                   {LOCATION_TYPES.map((type) => (
@@ -254,15 +314,103 @@ export default function CreateJobPage() {
                 htmlFor="keywords"
                 className="block text-sm font-medium text-text-200"
               >
-                Keywords separated by commas
+                Keywords (separated by commas)
               </label>
               <input
                 type="text"
                 id="keywords"
                 name="keywords"
-                placeholder="java springboot backend frontend"
+                placeholder="java, springboot, backend, frontend"
                 className="mt-1 block w-full rounded-md border border-background-800 bg-background-950 px-3 py-2 text-text-100 placeholder:text-text-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
               />
+            </div>
+
+            {/* Behavioral Questions Section */}
+            <div className="rounded-lg border border-background-800 p-4">
+              <h3 className="mb-4 text-lg font-medium text-text-100">
+                Behavioral Questions
+              </h3>
+              <p className="mb-4 text-sm text-text-300">
+                Add questions that assess soft skills, past experiences, and problem-solving approaches.
+              </p>
+              
+              <div className="space-y-4">
+                {behavioralQuestions.map((question, index) => (
+                  <div key={`behavioral-${index}`} className="flex items-start gap-2">
+                    <textarea
+                      value={question}
+                      onChange={(e) => handleBehavioralQuestionChange(index, e.target.value)}
+                      placeholder="e.g. Tell me about a time when you had to solve a complex problem."
+                      className="flex-1 rounded-md border border-background-800 bg-background-950 px-3 py-2 text-text-100 placeholder:text-text-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
+                      rows={2}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeBehavioralQuestion(index)}
+                      className="shrink-0 text-text-300 hover:text-text-100"
+                      disabled={behavioralQuestions.length === 1}
+                    >
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={addBehavioralQuestion}
+                className="mt-4 flex items-center gap-1 text-sm text-primary-300 hover:text-primary-400"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Add another behavioral question
+              </Button>
+            </div>
+
+            {/* Technical Questions Section */}
+            <div className="rounded-lg border border-background-800 p-4">
+              <h3 className="mb-4 text-lg font-medium text-text-100">
+                Technical Questions
+              </h3>
+              <p className="mb-4 text-sm text-text-300">
+                Add questions that assess technical skills, knowledge, and expertise relevant to the role.
+              </p>
+              
+              <div className="space-y-4">
+                {technicalQuestions.map((question, index) => (
+                  <div key={`technical-${index}`} className="flex items-start gap-2">
+                    <textarea
+                      value={question}
+                      onChange={(e) => handleTechnicalQuestionChange(index, e.target.value)}
+                      placeholder="e.g. Explain how you would implement a sorting algorithm."
+                      className="flex-1 rounded-md border border-background-800 bg-background-950 px-3 py-2 text-text-100 placeholder:text-text-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-stone-950"
+                      rows={2}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeTechnicalQuestion(index)}
+                      className="shrink-0 text-text-300 hover:text-text-100"
+                      disabled={technicalQuestions.length === 1}
+                    >
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={addTechnicalQuestion}
+                className="mt-4 flex items-center gap-1 text-sm text-primary-300 hover:text-primary-400"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Add another technical question
+              </Button>
             </div>
 
             <div className="flex justify-end space-x-4">
@@ -278,8 +426,9 @@ export default function CreateJobPage() {
               <Button
                 type="submit"
                 className="bg-primary-300 text-background-950 hover:bg-primary-400"
+                disabled={isSubmitting}
               >
-                Create Job
+                {isSubmitting ? "Creating..." : "Create Job"}
               </Button>
             </div>
           </form>
