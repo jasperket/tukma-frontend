@@ -4,7 +4,6 @@ import { useMicVAD } from "@ricky0123/vad-react";
 import { Mic, MicOff } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
-import { uploadAudio } from "../../actions/applicant";
 
 interface MicButtonProps {
   uploadAudio: (audio: Float32Array<ArrayBufferLike>) => void;
@@ -13,6 +12,7 @@ interface MicButtonProps {
 export default function MicButton({uploadAudio}: MicButtonProps) {
   const vad = useMicVAD({
     startOnLoad: false,
+    redemptionFrames: 30,
     onSpeechEnd: (audio) => {
       uploadAudio(audio);
       console.log("User stopped talking");

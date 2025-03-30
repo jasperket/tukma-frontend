@@ -559,8 +559,6 @@ export async function getJobDetails(accessKey: string) {
       credentials: "include", // Include cookies in the request
     });
 
-    console.log(response);
-
     // Check if the response is OK (status code 200-299)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

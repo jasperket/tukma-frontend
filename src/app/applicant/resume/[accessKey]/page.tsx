@@ -52,7 +52,7 @@ export default function JobDetailsPage() {
 
   function handleForward() {
     const hash = window.location.href.split("/").pop();
-    router.push(`/applicant/apply/${hash}`);
+    router.push(`/applicant/interview/${hash}`);
   }
 
   return (

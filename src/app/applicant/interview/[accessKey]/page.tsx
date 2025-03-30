@@ -1,22 +1,86 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import MicButton from "../../components/MicButton";
-import { startInterview } from "~/app/actions/applicant";
+import {
+  CheckStatus,
+  getMessages,
+  getQuestions,
+  Message,
+  Question,
+  startInterview,
+} from "~/app/actions/interview";
 import { io } from "socket.io-client";
 import wavEncoder from "wav-encoder";
+import { checkStatus } from "~/app/actions/interview";
+import { getJobDetails, JobWithKeywords } from "~/app/actions/recruiter";
 
 const socket = io("http://127.0.0.1:5000");
 
-export default function ApplicantPage() {
-  const [audioReady, setAudioReady] = useState(false);
+interface Props {
+  children: ReactNode;
+  role: string;
+}
+
+const SystemThinking: React.FC = () => {
+  return (
+    <>
+      {/* System Thinking Message */}
+      <div className="flex items-start">
+        <div className="max-w-[80%] rounded-lg bg-[#e6e2d9] p-3 text-[#3c3c3c]">
+          <div className="flex items-center">
+            <span className="mr-2">Thinking</span>
+            <span className="flex space-x-1">
+              <span
+                className="h-2 w-2 animate-bounce rounded-full bg-[#8b5d3f]"
+                style={{ animationDelay: "0ms" }}
+              ></span>
+              <span
+                className="h-2 w-2 animate-bounce rounded-full bg-[#8b5d3f]"
+                style={{ animationDelay: "150ms" }}
+              ></span>
+              <span
+                className="h-2 w-2 animate-bounce rounded-full bg-[#8b5d3f]"
+                style={{ animationDelay: "300ms" }}
+              ></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const MessageBubble: React.FC<Props> = ({ children, role }) => {
+  function getStyleContainer(role: string) {
+    if (role === "system") {
+      return "flex items-start";
+    }
+    return "flex items-start justify-end";
+  }
+
+  function getStyleInner(role: string) {
+    if (role === "system") {
+      return "bg-[#e6e2d9] text-[#3c3c3c] rounded-lg p-3 max-w-[80%]";
+    }
+    return "bg-[#8b5d3f] text-white rounded-lg p-3 max-w-[80%]";
+  }
+
+  return (
+    <>
+      <div className={getStyleContainer(role)}>
+        <div className={getStyleInner(role)}>
+          <p>{children}</p>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default function InterviewPage() {
+  const [status, setStatus] = useState<CheckStatus>();
+  const [job, setJob] = useState<JobWithKeywords>();
+  const [messages, setMessages] = useState<Message[]>();
   const [key, setKey] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -24,29 +88,41 @@ export default function ApplicantPage() {
     const accessKey = window.location.href.split("/").pop();
     setKey(accessKey!);
     async function init() {
-      const response = await startInterview(accessKey!);
+      const status = await checkStatus(accessKey!);
+      const job = await getJobDetails(accessKey!);
+      const question = await getQuestions(accessKey!);
+      const messages = await getMessages(accessKey!);
+      let interview;
 
-      const base64WithoutPrefix = response.data?.audio_data
-        .split(";base64,")
-        .pop();
+      console.log(status);
+      console.log(job);
+      console.log(question);
+      console.log(messages);
 
-      // Decode the base64 string into binary data
-      const binaryData = atob(base64WithoutPrefix!);
-      const byteArray = new Uint8Array(binaryData.length);
+      if (status.success === false) {
+        console.log(job);
+        console.log(question);
 
-      for (let i = 0; i < binaryData.length; i++) {
-        byteArray[i] = binaryData.charCodeAt(i);
+        const title = job.job?.job.title;
+        const description = job.job?.job.description;
+        const keys = job.job?.keywords;
+        const keywords = keys?.join(", ");
+        const questions = question.data;
+
+        interview = await startInterview(
+          accessKey!,
+          title!,
+          description!,
+          keywords!,
+          questions!,
+        );
+
+        console.log(interview);
       }
 
-      // Create a Blob from the binary data
-      const blob = new Blob([byteArray], { type: "audio/mpeg" });
-
-      // Create an object URL for the Blob
-      const url = URL.createObjectURL(blob);
-
-      // Create an Audio object and play the sound
-      const mySound = new Audio(url);
-      mySound.play();
+      if (messages?.success) {
+        setMessages(messages.data?.messages);
+      }
     }
 
     init();
@@ -59,19 +135,20 @@ export default function ApplicantPage() {
       console.log(event.data);
     });
 
-    socket.on("full_audio", async (encodedAudio: string) => {
+   socket.on("full_audio", async (encodedAudio: string) => {
       const byteArray = new Uint8Array(encodedAudio.length);
       for (let i = 0; i < encodedAudio.length; i++) {
         byteArray[i] = encodedAudio.charCodeAt(i);
       }
 
-      const blob = new Blob([byteArray], { type: 'audio/mp3' });
+      const blob = new Blob([byteArray], { type: "audio/mp3" });
       const url = URL.createObjectURL(blob);
 
       if (audioRef.current) {
         audioRef.current.src = url;
-        audioRef.current.play()
-          .catch(error => console.error('Playback failed:', error));
+        audioRef.current
+          .play()
+          .catch((error) => console.error("Playback failed:", error));
       }
     });
 
@@ -90,52 +167,107 @@ export default function ApplicantPage() {
           channelData: [audio],
         });
 
-        // Create a Blob from the encoded WAV data
-        // const blob = new Blob([wavData], { type: "audio/wav" });
-        socket.emit("room_message", { room: key, audio: wavData });
+        const chunkSize = 1024; // Adjust as needed
+        const uint8Array = new Uint8Array(wavData);
+
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+          const chunk = uint8Array.slice(i, i + chunkSize);
+          socket.emit("room_message_chunk", { room: key, audio: chunk });
+        }
+        socket.emit("room_message_end", { room: key });
       }
 
       init();
     }
   }
 
-  // User gesture handler
-  const handleUserInteraction = async () => {
-    try {
-      // Required for audio autoplay
-      if (audioRef.current) {
-        await audioRef.current.play();
-      }
-      setAudioReady(true);
-      // Trigger any additional logic for starting the interview
-    } catch (error) {
-      console.error("Audio initialization failed:", error);
-    }
-  };
-
   return (
     <>
       {/* Hidden audio element */}
-      <audio ref={audioRef} controls style={{ display: "none" }} />
-      <main className="grid grid-cols-2 gap-6 p-4">
-        {/* Right Column */}
-        <div className="flex items-center space-y-6">
-          {/* Interview Transcript Card */}
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle className="text-xl text-text-100">Interview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px] rounded-lg border border-background-800 bg-background-950 p-4">
-                <p className="text-sm text-text-400">
-                  Start the interview to see the transcript
-                </p>
+      <audio ref={audioRef} controls className="hidden" />
+      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center p-6">
+        <div className="w-full rounded-xl bg-white p-6 shadow-sm md:p-8">
+          <h1 className="mb-6 text-2xl font-bold text-[#3c3c3c] md:text-3xl">
+            Interview
+          </h1>
+
+          <div className="mb-8 rounded-lg bg-[#f8f7f4] md:p-8">
+            {/* Conversation Area */}
+            <div className="mb-6 space-y-6">
+              {/* System Message */}
+              <div className="flex items-start">
+                <div className="max-w-[80%] rounded-lg bg-[#e6e2d9] p-3 text-[#3c3c3c]">
+                  <p>
+                    Hello! Im ready to start your interview. Please tell me
+                    about your experience with project management.
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center justify-center pt-4">
-                <MicButton uploadAudio={sendAudio} />
+
+              {/* User Message */}
+              <div className="flex items-start justify-end">
+                <div className="max-w-[80%] rounded-lg bg-[#8b5d3f] p-3 text-white">
+                  <p>
+                    Ive been working as a project manager for about 5 years now,
+                    primarily in software development.
+                  </p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+
+              {/* System Message */}
+              <div className="flex items-start">
+                <div className="max-w-[80%] rounded-lg bg-[#e6e2d9] p-3 text-[#3c3c3c]">
+                  <p>
+                    Thats great! Could you describe a challenging project youve
+                    managed and how you handled it?
+                  </p>
+                </div>
+              </div>
+
+              {/* User Message */}
+              <div className="flex items-start justify-end">
+                <div className="max-w-[80%] rounded-lg bg-[#8b5d3f] p-3 text-white">
+                  <p>
+                    Sure. Last year, I led a team of 12 developers on a
+                    healthcare application with a tight deadline. We faced
+                    several technical challenges...
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Instructions */}
+          <div className="mb-8 grid gap-6 md:grid-cols-3">
+            <div className="rounded-lg bg-[#f8f7f4] p-4 text-center">
+              <div className="mb-2 font-medium text-[#8a7e6d]">Step 1</div>
+              <p className="text-sm text-[#3c3c3c]">
+                Click the microphone button to begin
+              </p>
+            </div>
+            <div className="rounded-lg bg-[#f8f7f4] p-4 text-center">
+              <div className="mb-2 font-medium text-[#8a7e6d]">Step 2</div>
+              <p className="text-sm text-[#3c3c3c]">
+                Speak clearly into your microphone
+              </p>
+            </div>
+            <div className="rounded-lg bg-[#f8f7f4] p-4 text-center">
+              <div className="mb-2 font-medium text-[#8a7e6d]">Step 3</div>
+              <p className="text-sm text-[#3c3c3c]">
+                Review your transcript when complete
+              </p>
+            </div>
+          </div>
+
+          {/* Mic Button */}
+          <div className="mt-6 flex justify-center">
+            <div
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-[#8b5d3f] text-white shadow-md transition-all hover:bg-[#7a4e33] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3f] focus:ring-opacity-50"
+              aria-label="Start recording"
+            >
+              <MicButton uploadAudio={sendAudio} />
+            </div>
+          </div>
         </div>
       </main>
     </>
