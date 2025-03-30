@@ -109,6 +109,7 @@ const MessageBubble: React.FC<Props> = ({ children, role }) => {
 };
 
 export default function InterviewPage() {
+  const [loading, setLoading] = useState<boolean>(true);
   const [thinking, setThinking] = useState<boolean>(false);
   const [processing, setProcessing] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>();
@@ -124,8 +125,8 @@ export default function InterviewPage() {
       const status = await checkStatus(accessKey!);
       const job = await getJobDetails(accessKey!);
       const question = await getQuestions(accessKey!);
-      const messages = await getMessages(accessKey!);
 
+      setLoading(false);
       setThinking(true);
 
       const title = job.job?.job.title;
@@ -142,6 +143,7 @@ export default function InterviewPage() {
         questions!,
       );
 
+      const messages = await getMessages(accessKey!);
       if (messages?.success) {
         setMessages(messages.data?.messages);
       }
@@ -265,7 +267,7 @@ export default function InterviewPage() {
           <div className="mb-8 rounded-lg bg-[#f8f7f4] md:p-8">
             {/* Conversation Area */}
             <div
-              className="mb-6 max-h-[350px] space-y-6 overflow-y-auto scroll-smooth pr-2"
+              className="mb-6 min-h-[350] max-h-[350px] space-y-6 overflow-y-auto scroll-smooth pr-2"
               ref={chatContainerRef}
               style={{ scrollBehavior: "smooth" }}
             >
@@ -275,6 +277,9 @@ export default function InterviewPage() {
                 </MessageBubble>
               ))}
 
+              {loading && (
+                <SystemThinking role={"test"}>Loading</SystemThinking>
+              )}
               {thinking && (
                 <SystemThinking role={"test"}>Thinking</SystemThinking>
               )}

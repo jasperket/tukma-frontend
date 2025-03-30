@@ -143,7 +143,7 @@ function generatePromptWithQuestions(
   Job Description: ${description}
   Job Keywords: ${keywords}
 
-  Begin by introducing yourself briefly and explaining the interview process. Then, ask the candidate a mix of behavioral and technical questions. Ensure that your tone is friendly, professional, and conversational. Use the following sample questions as a template for the conversation:
+  Begin by briefly and explaining the interview process. Then, ask the candidate a mix of behavioral and technical questions. Ensure that your tone is friendly, professional, and conversational. Use the following sample questions as a template for the conversation:
 
   Behavioral Questions:
   ${behavioralQuestions}
@@ -194,6 +194,8 @@ export async function startInterview(
     } else {
       prompt = generatePromptUndefined(title, description, keywords);
     }
+
+    console.log(prompt);
 
     const response = await fetch(`${BASE_URL}start_interview`, {
       method: "POST",
