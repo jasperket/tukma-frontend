@@ -15,7 +15,7 @@ import wavEncoder from "wav-encoder";
 import { checkStatus } from "~/app/actions/interview";
 import { getJobDetails, JobWithKeywords } from "~/app/actions/recruiter";
 
-const socket = io("https://tukma-backend-copy-production.up.railway.app");
+const socket = io("https://tukma-backend-copy-production.up.railway.app/");
 
 interface Props {
   children: ReactNode;
