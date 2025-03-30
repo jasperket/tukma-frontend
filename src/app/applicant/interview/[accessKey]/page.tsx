@@ -22,14 +22,17 @@ interface Props {
   role: string;
 }
 
-const SystemThinking: React.FC = () => {
+const SystemThinking: React.FC<Props> = ({
+  children = "Thinking",
+  role = "def",
+}) => {
   return (
     <>
       {/* System Thinking Message */}
       <div className="flex items-start">
         <div className="max-w-[80%] rounded-lg bg-[#e6e2d9] p-3 text-[#3c3c3c]">
           <div className="flex items-center">
-            <span className="mr-2">Thinking</span>
+            <span className="mr-2">{children}</span>
             <span className="flex space-x-1">
               <span
                 className="h-2 w-2 animate-bounce rounded-full bg-[#8b5d3f]"
@@ -78,11 +81,12 @@ const MessageBubble: React.FC<Props> = ({ children, role }) => {
 };
 
 export default function InterviewPage() {
-  const [status, setStatus] = useState<CheckStatus>();
-  const [job, setJob] = useState<JobWithKeywords>();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [thinking, setThinking] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>();
   const [key, setKey] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   let audioChunks: Uint8Array<ArrayBuffer>[] = [];
 
   useEffect(() => {
@@ -101,6 +105,7 @@ export default function InterviewPage() {
       console.log(messages);
 
       if (status.success === false) {
+        setThinking(true);
         console.log(job);
         console.log(question);
 
@@ -119,10 +124,12 @@ export default function InterviewPage() {
         );
 
         console.log(interview);
+        setThinking(false);
       }
 
       if (messages?.success) {
         setMessages(messages.data?.messages);
+        setLoading(false);
       }
     }
 
@@ -146,7 +153,10 @@ export default function InterviewPage() {
     // Optionally, if you have a separate event to mark the end of the stream.
     socket.on("audio_end", () => {
       // Combine all chunks into one Uint8Array.
-      const totalLength = audioChunks.reduce((acc, curr) => acc + curr.length, 0);
+      const totalLength = audioChunks.reduce(
+        (acc, curr) => acc + curr.length,
+        0,
+      );
       const combined = new Uint8Array(totalLength);
       let offset = 0;
       audioChunks.forEach((chunk) => {
@@ -166,6 +176,7 @@ export default function InterviewPage() {
       }
       // Reset chunks for future use.
       audioChunks = [];
+      setThinking(false);
     });
 
     socket.on("full_audio", async (encodedAudio: string) => {
@@ -201,8 +212,17 @@ export default function InterviewPage() {
     };
   }, []);
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   function sendAudio(audio: Float32Array<ArrayBufferLike>) {
     if (socket) {
+      setThinking(true);
       async function init() {
         const wavData = await wavEncoder.encode({
           sampleRate: 16000,
@@ -235,47 +255,25 @@ export default function InterviewPage() {
 
           <div className="mb-8 rounded-lg bg-[#f8f7f4] md:p-8">
             {/* Conversation Area */}
-            <div className="mb-6 space-y-6">
-              {/* System Message */}
-              <div className="flex items-start">
-                <div className="max-w-[80%] rounded-lg bg-[#e6e2d9] p-3 text-[#3c3c3c]">
-                  <p>
-                    Hello! Im ready to start your interview. Please tell me
-                    about your experience with project management.
-                  </p>
-                </div>
-              </div>
+            <div
+              className="mb-6 max-h-[350px] space-y-6 overflow-y-auto scroll-smooth pr-2"
+              ref={chatContainerRef}
+              style={{ scrollBehavior: "smooth" }}
+            >
+              {messages?.map((message) => (
+                <MessageBubble
+                  key={message.id}
+                  children={message.content}
+                  role={message.role}
+                />
+              ))}
 
-              {/* User Message */}
-              <div className="flex items-start justify-end">
-                <div className="max-w-[80%] rounded-lg bg-[#8b5d3f] p-3 text-white">
-                  <p>
-                    Ive been working as a project manager for about 5 years now,
-                    primarily in software development.
-                  </p>
-                </div>
-              </div>
-
-              {/* System Message */}
-              <div className="flex items-start">
-                <div className="max-w-[80%] rounded-lg bg-[#e6e2d9] p-3 text-[#3c3c3c]">
-                  <p>
-                    Thats great! Could you describe a challenging project youve
-                    managed and how you handled it?
-                  </p>
-                </div>
-              </div>
-
-              {/* User Message */}
-              <div className="flex items-start justify-end">
-                <div className="max-w-[80%] rounded-lg bg-[#8b5d3f] p-3 text-white">
-                  <p>
-                    Sure. Last year, I led a team of 12 developers on a
-                    healthcare application with a tight deadline. We faced
-                    several technical challenges...
-                  </p>
-                </div>
-              </div>
+              {thinking && (
+                <SystemThinking role={"test"}>Thinking</SystemThinking>
+              )}
+              {loading && (
+                <SystemThinking role={"test"}>Loading</SystemThinking>
+              )}
             </div>
           </div>
 
