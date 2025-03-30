@@ -261,11 +261,9 @@ export default function InterviewPage() {
               style={{ scrollBehavior: "smooth" }}
             >
               {messages?.map((message) => (
-                <MessageBubble
-                  key={message.id}
-                  children={message.content}
-                  role={message.role}
-                />
+                <MessageBubble key={message.id} role={message.role}>
+                  {message.content}
+                </MessageBubble>
               ))}
 
               {thinking && (
