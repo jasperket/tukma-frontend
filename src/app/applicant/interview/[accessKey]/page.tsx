@@ -83,6 +83,7 @@ export default function InterviewPage() {
   const [messages, setMessages] = useState<Message[]>();
   const [key, setKey] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  let audioChunks: Uint8Array<ArrayBuffer>[] = [];
 
   useEffect(() => {
     const accessKey = window.location.href.split("/").pop();
@@ -135,7 +136,39 @@ export default function InterviewPage() {
       console.log(event.data);
     });
 
-   socket.on("full_audio", async (encodedAudio: string) => {
+    // Listen for the 'audio_chunk' event and push the data into audioChunks.
+    socket.on("audio_chunk", (data: string) => {
+      // Convert the received latin-1 string back into a Uint8Array.
+      const chunk = latin1ToUint8Array(data);
+      audioChunks.push(chunk);
+    });
+
+    // Optionally, if you have a separate event to mark the end of the stream.
+    socket.on("audio_end", () => {
+      // Combine all chunks into one Uint8Array.
+      let totalLength = audioChunks.reduce((acc, curr) => acc + curr.length, 0);
+      let combined = new Uint8Array(totalLength);
+      let offset = 0;
+      audioChunks.forEach((chunk) => {
+        combined.set(chunk, offset);
+        offset += chunk.length;
+      });
+
+      // Create a Blob from the combined data (adjust the MIME type if necessary).
+      const audioBlob = new Blob([combined], { type: "audio/mp3" });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current
+          .play()
+          .catch((error) => console.error("Playback failed:", error));
+      }
+      // Reset chunks for future use.
+      audioChunks = [];
+    });
+
+    socket.on("full_audio", async (encodedAudio: string) => {
       const byteArray = new Uint8Array(encodedAudio.length);
       for (let i = 0; i < encodedAudio.length; i++) {
         byteArray[i] = encodedAudio.charCodeAt(i);
@@ -153,6 +186,15 @@ export default function InterviewPage() {
     });
 
     socket.emit("join_room", { room: accessKey });
+
+    socket.on("audio_error", (error) => {
+      handleAudioError(error.message);
+    });
+
+    function handleAudioError(message: string) {
+      console.error("Audio error:", message);
+      // Show error message to user
+    }
 
     return () => {
       socket.disconnect();
@@ -272,4 +314,12 @@ export default function InterviewPage() {
       </main>
     </>
   );
+}
+
+function latin1ToUint8Array(str: string) {
+  const array = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) {
+    array[i] = str.charCodeAt(i);
+  }
+  return array;
 }
