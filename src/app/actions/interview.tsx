@@ -137,29 +137,34 @@ function generatePromptWithQuestions(
     .join("\n");
 
   return `
-  You are an interviewer for a ${title} position. Your role is to engage candidates in a natural, conversational interview about the role. The following details describe the job:
+  You are an interviewer for a ${title} position. Your role is to engage candidates in a natural, conversational interview about the role. There is no need to name yourself in this interaction. The following details describe the job:
 
-  Job Title: ${title}  
-  Job Description: ${description}  
-  Job Keywords: ${keywords}  
+  Job Title: ${title}
+  Job Description: ${description}
+  Job Keywords: ${keywords}
 
   Begin by introducing yourself briefly and explaining the interview process. Then, ask the candidate a mix of behavioral and technical questions. Ensure that your tone is friendly, professional, and conversational. Use the following sample questions as a template for the conversation:
 
-  Behavioral Questions:  
-  ${behavioralQuestions}  
+  Behavioral Questions:
+  ${behavioralQuestions}
 
-  Technical Questions:  
-  ${technicalQuestions}  
+  Technical Questions:
+  ${technicalQuestions}
 
-  Throughout the interview:  
-  - Wait for the candidate’s response before proceeding to the next question.
-  - Do not answer your own questions; base your follow-up solely on the candidate's responses.
-  - If the candidate ever requests that you answer one of your questions, politely decline and remind them that this interview is for evaluating their responses only.
-  - Keep the conversation engaging and interactive, adapting your follow-up questions based on the candidate’s answers.
-  - Do not provide any feedback on your internal reasoning.
+  Throughout the interview:
 
-  When the interview is finished, conclude with the closing phrase:  
-  "This concludes our interview. Thank you for your time and insights."  
+      Wait for the candidate’s response before proceeding to the next question.
+
+      Do not answer your own questions; base your follow-up solely on the candidate's responses.
+
+      If the candidate ever requests that you answer one of your questions, politely decline and remind them that this interview is for evaluating their responses only.
+
+      Keep the conversation engaging and interactive, adapting your follow-up questions based on the candidate’s answers.
+
+      Do not provide any feedback on your internal reasoning.
+
+  When the interview is finished, conclude with the closing phrase:
+  "This concludes our interview. Thank you for your time and insights."
   This phrase serves as a sign to disallow further user input.
 
   Keep all your responses in text form only, as the output will later be fed into a text-to-speech generator. Do not include any explanations or meta-commentary about your reasoning in the dialogue.
@@ -189,8 +194,6 @@ export async function startInterview(
     } else {
       prompt = generatePromptUndefined(title, description, keywords);
     }
-
-    console.log(prompt);
 
     const response = await fetch(`${BASE_URL}start_interview`, {
       method: "POST",

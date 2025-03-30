@@ -22,6 +22,34 @@ interface Props {
   role: string;
 }
 
+const UserThinking: React.FC<Props> = ({ children, role }) => {
+  return (
+    <>
+      <div className="flex items-start justify-end">
+        <div className="max-w-[80%] rounded-lg bg-[#8b5d3f] p-3 text-white">
+          <div className="flex items-center">
+            <span className="mr-2">{children}</span>
+            <span className="flex space-x-1">
+              <span
+                className="h-2 w-2 animate-bounce rounded-full bg-white"
+                style={{ animationDelay: "0ms" }}
+              ></span>
+              <span
+                className="h-2 w-2 animate-bounce rounded-full bg-white"
+                style={{ animationDelay: "150ms" }}
+              ></span>
+              <span
+                className="h-2 w-2 animate-bounce rounded-full bg-white"
+                style={{ animationDelay: "300ms" }}
+              ></span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 const SystemThinking: React.FC<Props> = ({
   children = "Thinking",
   role = "def",
@@ -81,8 +109,8 @@ const MessageBubble: React.FC<Props> = ({ children, role }) => {
 };
 
 export default function InterviewPage() {
-  const [loading, setLoading] = useState<boolean>(true);
   const [thinking, setThinking] = useState<boolean>(false);
+  const [processing, setProcessing] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>();
   const [key, setKey] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -97,40 +125,27 @@ export default function InterviewPage() {
       const job = await getJobDetails(accessKey!);
       const question = await getQuestions(accessKey!);
       const messages = await getMessages(accessKey!);
-      let interview;
 
-      console.log(status);
-      console.log(job);
-      console.log(question);
-      console.log(messages);
+      setThinking(true);
 
-      if (status.success === false) {
-        setThinking(true);
-        console.log(job);
-        console.log(question);
+      const title = job.job?.job.title;
+      const description = job.job?.job.description;
+      const keys = job.job?.keywords;
+      const keywords = keys?.join(", ");
+      const questions = question.data;
 
-        const title = job.job?.job.title;
-        const description = job.job?.job.description;
-        const keys = job.job?.keywords;
-        const keywords = keys?.join(", ");
-        const questions = question.data;
-
-        interview = await startInterview(
-          accessKey!,
-          title!,
-          description!,
-          keywords!,
-          questions!,
-        );
-
-        console.log(interview);
-        setThinking(false);
-      }
+      const interview = await startInterview(
+        accessKey!,
+        title!,
+        description!,
+        keywords!,
+        questions!,
+      );
 
       if (messages?.success) {
         setMessages(messages.data?.messages);
-        setLoading(false);
       }
+      setThinking(false);
     }
 
     init();
@@ -148,6 +163,17 @@ export default function InterviewPage() {
       // Convert the received latin-1 string back into a Uint8Array.
       const chunk = latin1ToUint8Array(data);
       audioChunks.push(chunk);
+    });
+
+    socket.on("user_message", (data: Message[]) => {
+      setProcessing(false);
+      setMessages(data);
+      setThinking(true);
+    });
+
+    socket.on("system_message", (data: Message[]) => {
+      setThinking(false);
+      setMessages(data);
     });
 
     // Optionally, if you have a separate event to mark the end of the stream.
@@ -179,23 +205,6 @@ export default function InterviewPage() {
       setThinking(false);
     });
 
-    socket.on("full_audio", async (encodedAudio: string) => {
-      const byteArray = new Uint8Array(encodedAudio.length);
-      for (let i = 0; i < encodedAudio.length; i++) {
-        byteArray[i] = encodedAudio.charCodeAt(i);
-      }
-
-      const blob = new Blob([byteArray], { type: "audio/mp3" });
-      const url = URL.createObjectURL(blob);
-
-      if (audioRef.current) {
-        audioRef.current.src = url;
-        audioRef.current
-          .play()
-          .catch((error) => console.error("Playback failed:", error));
-      }
-    });
-
     socket.emit("join_room", { room: accessKey });
 
     socket.on("audio_error", (error: Error) => {
@@ -218,18 +227,18 @@ export default function InterviewPage() {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, thinking, processing]);
 
   function sendAudio(audio: Float32Array<ArrayBufferLike>) {
     if (socket) {
-      setThinking(true);
+      setProcessing(true);
       async function init() {
         const wavData = await wavEncoder.encode({
           sampleRate: 16000,
           channelData: [audio],
         });
 
-        const chunkSize = 1024; // Adjust as needed
+        const chunkSize = 8192; // Adjust as needed
         const uint8Array = new Uint8Array(wavData);
 
         for (let i = 0; i < uint8Array.length; i += chunkSize) {
@@ -269,8 +278,8 @@ export default function InterviewPage() {
               {thinking && (
                 <SystemThinking role={"test"}>Thinking</SystemThinking>
               )}
-              {loading && (
-                <SystemThinking role={"test"}>Loading</SystemThinking>
+              {processing && (
+                <UserThinking role={"test"}>Processing</UserThinking>
               )}
             </div>
           </div>
