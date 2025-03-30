@@ -51,8 +51,7 @@ export default function JobDetailsPage() {
   }
 
   function handleForward() {
-    const hash = window.location.href.split("/").pop();
-    router.push(`/applicant/interview/${hash}`);
+    router.push(`/applicant/interview/${resume?.resume.job.accessKey}`);
   }
 
   return (
