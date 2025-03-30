@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 
-const BASE_URL = "https://tukma-backend-copy-production.up.railway.app/";
+const BASE_URL = "http://127.0.0.1:5000/";
 
 export interface Question {
   id: number;

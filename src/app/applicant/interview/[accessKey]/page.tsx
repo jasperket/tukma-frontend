@@ -15,7 +15,9 @@ import wavEncoder from "wav-encoder";
 import { checkStatus } from "~/app/actions/interview";
 import { getJobDetails, JobWithKeywords } from "~/app/actions/recruiter";
 
-const socket = io("https://tukma-backend-copy-production.up.railway.app/");
+const socket = io("http://127.0.0.1:5000/", {
+  withCredentials: true,
+});
 
 interface Props {
   children: ReactNode;
@@ -267,7 +269,7 @@ export default function InterviewPage() {
           <div className="mb-8 rounded-lg bg-[#f8f7f4] md:p-8">
             {/* Conversation Area */}
             <div
-              className="mb-6 min-h-[350] max-h-[350px] space-y-6 overflow-y-auto scroll-smooth pr-2"
+              className="mb-6 max-h-[350px] min-h-[350] space-y-6 overflow-y-auto scroll-smooth pr-2"
               ref={chatContainerRef}
               style={{ scrollBehavior: "smooth" }}
             >
