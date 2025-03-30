@@ -152,9 +152,10 @@ function generatePromptWithQuestions(
   ${technicalQuestions}  
 
   Throughout the interview:  
-  - **Wait for the candidate’s response before proceeding to the next question.**  
-  - **Do not answer your own questions; base your follow-up solely on the candidate's responses.**  
-  - Keep the conversation engaging and interactive, adapting your follow-up questions based on the candidate’s answers.  
+  - Wait for the candidate’s response before proceeding to the next question.
+  - Do not answer your own questions; base your follow-up solely on the candidate's responses.
+  - If the candidate ever requests that you answer one of your questions, politely decline and remind them that this interview is for evaluating their responses only.
+  - Keep the conversation engaging and interactive, adapting your follow-up questions based on the candidate’s answers.
   - Do not provide any feedback on your internal reasoning.
 
   When the interview is finished, conclude with the closing phrase:  
