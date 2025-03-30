@@ -146,8 +146,8 @@ export default function InterviewPage() {
     // Optionally, if you have a separate event to mark the end of the stream.
     socket.on("audio_end", () => {
       // Combine all chunks into one Uint8Array.
-      let totalLength = audioChunks.reduce((acc, curr) => acc + curr.length, 0);
-      let combined = new Uint8Array(totalLength);
+      const totalLength = audioChunks.reduce((acc, curr) => acc + curr.length, 0);
+      const combined = new Uint8Array(totalLength);
       let offset = 0;
       audioChunks.forEach((chunk) => {
         combined.set(chunk, offset);
@@ -187,7 +187,7 @@ export default function InterviewPage() {
 
     socket.emit("join_room", { room: accessKey });
 
-    socket.on("audio_error", (error) => {
+    socket.on("audio_error", (error: Error) => {
       handleAudioError(error.message);
     });
 
