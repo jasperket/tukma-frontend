@@ -147,7 +147,7 @@ export default function InterviewPage() {
 
       const messages = await getMessages(accessKey!);
       if (messages?.success) {
-        setMessages(messages.data?.messages);
+        modifyMessage(messages.data!.messages);
       }
       setThinking(false);
     }
@@ -171,13 +171,13 @@ export default function InterviewPage() {
 
     socket.on("user_message", (data: Message[]) => {
       setProcessing(false);
-      setMessages(data);
+      modifyMessage(data);
       setThinking(true);
     });
 
     socket.on("system_message", (data: Message[]) => {
       setThinking(false);
-      setMessages(data);
+      modifyMessage(data);
     });
 
     // Optionally, if you have a separate event to mark the end of the stream.
@@ -232,6 +232,11 @@ export default function InterviewPage() {
         chatContainerRef.current.scrollHeight;
     }
   }, [messages, thinking, processing]);
+
+  function modifyMessage(message: Message[]) {
+    const messages = message.slice(1);
+    setMessages(messages);
+  }
 
   function sendAudio(audio: Float32Array<ArrayBufferLike>) {
     if (socket) {
