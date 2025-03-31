@@ -247,7 +247,7 @@ export default function InterviewPage() {
           channelData: [audio],
         });
 
-        const chunkSize = 8192; // Adjust as needed
+        const chunkSize = 512; // Adjust as needed
         const uint8Array = new Uint8Array(wavData);
 
         for (let i = 0; i < uint8Array.length; i += chunkSize) {
