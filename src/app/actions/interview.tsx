@@ -215,9 +215,8 @@ export async function startInterview(
 ) {
   try {
     console.log("Starting interview");
-    let prompt;
 
-    prompt = generatePromptWithQuestions(
+    const prompt = generatePromptWithQuestions(
       title,
       description,
       keywords,
