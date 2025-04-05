@@ -172,7 +172,7 @@ export default function InterviewPage() {
 
     init();
 
-    recognition!.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const combinedTranscript = Array.from(event.results)
         .map((result) => result[0]?.transcript) // Get transcript of the first alternative
         .join(" ") // Concatenate them
@@ -185,7 +185,7 @@ export default function InterviewPage() {
       setTranscript(combinedTranscript);
     };
 
-    recognition!.onend = () => {
+    recognition.onend = () => {
       const currentTranscript = transcriptRef.current;
       setTranscript(currentTranscript);
 
@@ -249,7 +249,7 @@ export default function InterviewPage() {
   }
 
   function handleStop() {
-    if (synthRef.current && synthRef.current.speaking) {
+    if (synthRef.current?.speaking) {
       synthRef.current.cancel();
     }
   }
@@ -355,7 +355,7 @@ export default function InterviewPage() {
               )}
               {!start && !loading && (
                 <UserThinking role={"test"}>
-                  Press the "Start Interview" button to begin
+                  Press the &quot;Start Interview&quot; button to begin
                 </UserThinking>
               )}
             </div>
