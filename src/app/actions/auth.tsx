@@ -18,7 +18,7 @@ interface UserDetails {
   credentialsNonExpired: boolean;
 }
 
-interface UserDetailsWrapper {
+export interface UserDetailsWrapper {
   userDetails: UserDetails;
 }
 
@@ -120,6 +120,7 @@ export async function login(data: LoginFormValues) {
         });
 
         const isRecruiter = await checkUser();
+        console.log(isRecruiter);
         // Store the user type in a cookie
         cookieStore.set("userType", isRecruiter ? "recruiter" : "applicant", {
           httpOnly: true,
@@ -183,6 +184,42 @@ export async function checkUser() {
     console.log("User details:", json);
 
     return isRecruiter;
+  } catch (error) {
+    console.error("Failed to check user status: ", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+}
+
+export async function getUserInfo() {
+  try {
+    console.log("Checking user status...");
+
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+    const response = await fetch(`${BASE_URL}/api/v1/auth/user-status`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `jwt=${cookie?.value}`,
+      },
+      credentials: "include", // Include cookies in the request
+    });
+
+    // Check if the response is OK (status code 200-299)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Parse the JSON response
+    const json = (await response.json()) as UserDetailsWrapper;
+
+    console.log("User details:", json.userDetails);
+
+    return {"success": true, "data": json};
   } catch (error) {
     console.error("Failed to check user status: ", error);
     return {

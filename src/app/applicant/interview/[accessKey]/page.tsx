@@ -1,23 +1,20 @@
 "use client";
 
 import React, { ReactNode, useEffect, useRef, useState } from "react";
-import MicButton from "../../components/MicButton";
+import { Mic, MicOff } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 import {
   CheckStatus,
   getMessages,
   getQuestions,
   Message,
   Question,
+  reply,
   startInterview,
 } from "~/app/actions/interview";
-import { io } from "socket.io-client";
-import wavEncoder from "wav-encoder";
-import { checkStatus } from "~/app/actions/interview";
 import { getJobDetails, JobWithKeywords } from "~/app/actions/recruiter";
-
-const socket = io("http://127.0.0.1:5000/", {
-  withCredentials: true,
-});
+import { getUserInfo, UserDetailsWrapper } from "~/app/actions/auth";
 
 interface Props {
   children: ReactNode;
@@ -30,21 +27,7 @@ const UserThinking: React.FC<Props> = ({ children, role }) => {
       <div className="flex items-start justify-end">
         <div className="max-w-[80%] rounded-lg bg-[#8b5d3f] p-3 text-white">
           <div className="flex items-center">
-            <span className="mr-2">{children}</span>
-            <span className="flex space-x-1">
-              <span
-                className="h-2 w-2 animate-bounce rounded-full bg-white"
-                style={{ animationDelay: "0ms" }}
-              ></span>
-              <span
-                className="h-2 w-2 animate-bounce rounded-full bg-white"
-                style={{ animationDelay: "150ms" }}
-              ></span>
-              <span
-                className="h-2 w-2 animate-bounce rounded-full bg-white"
-                style={{ animationDelay: "300ms" }}
-              ></span>
-            </span>
+            <span>{children}</span>
           </div>
         </div>
       </div>
@@ -113,115 +96,125 @@ const MessageBubble: React.FC<Props> = ({ children, role }) => {
 export default function InterviewPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [thinking, setThinking] = useState<boolean>(false);
-  const [processing, setProcessing] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
+  const [mic, setMic] = useState<boolean>(false);
+  const [start, setStart] = useState<boolean>(false);
+
   const [messages, setMessages] = useState<Message[]>();
-  const [key, setKey] = useState("");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [transcript, setTranscript] = useState<string>();
+
+  const [job, setJob] = useState<JobWithKeywords>();
+  const [question, setQuestion] = useState<Question[]>();
+
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  let audioChunks: Uint8Array<ArrayBuffer>[] = [];
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
+  const transcriptRef = useRef(transcript);
+  const nameRef = useRef<string | null>(null);
+  const emailRef = useRef<string | null>(null);
 
   useEffect(() => {
     const accessKey = window.location.href.split("/").pop();
-    setKey(accessKey!);
+
+    // Check for browser support (and vendor prefixes)
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+    const synth = window.speechSynthesis;
+
+    if (recognition) {
+      recognition.continuous = true; // Keep listening even after pauses
+      recognition.lang = "en-US"; // Set the language
+      recognitionRef.current = recognition;
+    }
+
+    if (synth) {
+      synthRef.current = synth;
+      if (synthRef.current.speaking) {
+        synthRef.current.cancel();
+      }
+    }
+
+    if (!recognition) {
+      console.log("Speech Recognition API is not supported in this browser.");
+      setError(true);
+      return;
+    }
+
     async function init() {
-      const status = await checkStatus(accessKey!);
+      const userInfo = await getUserInfo();
       const job = await getJobDetails(accessKey!);
       const question = await getQuestions(accessKey!);
 
-      setLoading(false);
-      setThinking(true);
-
-      const title = job.job?.job.title;
-      const description = job.job?.job.description;
-      const keys = job.job?.keywords;
-      const keywords = keys?.join(", ");
-      const questions = question.data;
-
-      const interview = await startInterview(
-        accessKey!,
-        title!,
-        description!,
-        keywords!,
-        questions!,
-      );
-
-      const messages = await getMessages(accessKey!);
-      if (messages?.success) {
-        modifyMessage(messages.data!.messages);
+      if (!userInfo.success) {
+        setError(true);
+        return;
       }
-      setThinking(false);
+      if (!job.success) {
+        setError(true);
+        return;
+      }
+      if (!question.success) {
+        setError(true);
+        return;
+      }
+
+      nameRef.current =
+        userInfo.data!.userDetails.firstName +
+        " " +
+        userInfo.data!.userDetails.lastName;
+      emailRef.current = userInfo.data!.userDetails.username;
+      setJob(job.job);
+      setQuestion(question.data);
+
+      setLoading(false);
     }
 
     init();
 
-    socket.on("open", (event) => {
-      console.log("WebSocket connection opened:", event.message);
-    });
+    recognition!.onresult = (event: SpeechRecognitionEvent) => {
+      const combinedTranscript = Array.from(event.results)
+        .map((result) => result[0]?.transcript) // Get transcript of the first alternative
+        .join(" ") // Concatenate them
+        .trim();
 
-    socket.on("message", (event: MessageEvent) => {
-      console.log(event.data);
-    });
-
-    // Listen for the 'audio_chunk' event and push the data into audioChunks.
-    socket.on("audio_chunk", (data: string) => {
-      // Convert the received latin-1 string back into a Uint8Array.
-      const chunk = latin1ToUint8Array(data);
-      audioChunks.push(chunk);
-    });
-
-    socket.on("user_message", (data: Message[]) => {
-      setProcessing(false);
-      modifyMessage(data);
-      setThinking(true);
-    });
-
-    socket.on("system_message", (data: Message[]) => {
-      setThinking(false);
-      modifyMessage(data);
-    });
-
-    // Optionally, if you have a separate event to mark the end of the stream.
-    socket.on("audio_end", () => {
-      // Combine all chunks into one Uint8Array.
-      const totalLength = audioChunks.reduce(
-        (acc, curr) => acc + curr.length,
-        0,
-      );
-      const combined = new Uint8Array(totalLength);
-      let offset = 0;
-      audioChunks.forEach((chunk) => {
-        combined.set(chunk, offset);
-        offset += chunk.length;
-      });
-
-      // Create a Blob from the combined data (adjust the MIME type if necessary).
-      const audioBlob = new Blob([combined], { type: "audio/mp3" });
-      const audioUrl = URL.createObjectURL(audioBlob);
-
-      if (audioRef.current) {
-        audioRef.current.src = audioUrl;
-        audioRef.current
-          .play()
-          .catch((error) => console.error("Playback failed:", error));
+      if (combinedTranscript === undefined || combinedTranscript === null) {
+        return;
       }
-      // Reset chunks for future use.
-      audioChunks = [];
-      setThinking(false);
-    });
 
-    socket.emit("join_room", { room: accessKey });
+      setTranscript(combinedTranscript);
+    };
 
-    socket.on("audio_error", (error: Error) => {
-      handleAudioError(error.message);
-    });
+    recognition!.onend = () => {
+      const currentTranscript = transcriptRef.current;
+      setTranscript(currentTranscript);
 
-    function handleAudioError(message: string) {
-      console.error("Audio error:", message);
-      // Show error message to user
-    }
+      async function sendReply() {
+        setThinking(true);
 
-    return () => {
-      socket.disconnect();
+        const response = await reply(
+          getKey(),
+          nameRef.current!,
+          emailRef.current!,
+          transcriptRef.current!,
+        );
+
+        const response2 = await getMessages(
+          getKey(),
+          nameRef.current!,
+          emailRef.current!,
+        );
+        setThinking(false);
+        if (response2.success) {
+          setTranscript("");
+          modifyMessage(response2.data!.messages);
+        }
+        if (response.success) {
+          speech(response.data!.system);
+        }
+      }
+
+      sendReply();
     };
   }, []);
 
@@ -231,40 +224,103 @@ export default function InterviewPage() {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
-  }, [messages, thinking, processing]);
+  }, [messages, thinking, transcript]);
+
+  useEffect(() => {
+    transcriptRef.current = transcript;
+  }, [transcript]);
 
   function modifyMessage(message: Message[]) {
     const messages = message.slice(1);
     setMessages(messages);
   }
 
-  function sendAudio(audio: Float32Array<ArrayBufferLike>) {
-    if (socket) {
-      setProcessing(true);
-      async function init() {
-        const wavData = await wavEncoder.encode({
-          sampleRate: 16000,
-          channelData: [audio],
-        });
+  function getKey(): string {
+    return window.location.href.split("/").pop()!;
+  }
 
-        const chunkSize = 512; // Adjust as needed
-        const uint8Array = new Uint8Array(wavData);
-
-        for (let i = 0; i < uint8Array.length; i += chunkSize) {
-          const chunk = uint8Array.slice(i, i + chunkSize);
-          socket.emit("room_message_chunk", { room: key, audio: chunk });
-        }
-        socket.emit("room_message_end", { room: key });
-      }
-
-      init();
+  function handleMic() {
+    setMic((prevMic) => !prevMic);
+    if (!mic) {
+      recognitionRef.current?.start();
+    } else {
+      recognitionRef.current?.stop();
     }
+  }
+
+  function handleStop() {
+    if (synthRef.current && synthRef.current.speaking) {
+      synthRef.current.cancel();
+    }
+  }
+
+  function speech(text: string) {
+    if (!synthRef.current || !text) {
+      console.log("Synth not ready or no text to speak.");
+      console.log(text);
+      return;
+    }
+    handleStop();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.pitch = 1;
+    utterance.rate = 1;
+
+    utterance.onstart = () => {
+      console.log("Speech started.");
+    };
+    utterance.onend = () => {
+      console.log("Speech finished.");
+    };
+    utterance.onerror = (event) => {
+      console.log("Speech synthesis error:", event.error);
+    };
+
+    // Workaround for potential issues where queue isn't cleared
+    synthRef.current.cancel();
+    // setTimeout(() => synthRef.current?.speak(utterance), 50); // Tiny delay can sometimes help
+    synthRef.current?.speak(utterance)
+  }
+
+  async function handleStartInterview() {
+    setStart(true);
+
+    const title = job?.job.title;
+    const description = job?.job.description;
+    const keys = job?.keywords;
+    const keywords = keys?.join(", ");
+    const questions = question;
+
+    setThinking(true);
+
+    const interview = await startInterview(
+      getKey(),
+      title!,
+      description!,
+      keywords!,
+      questions!,
+      nameRef.current!,
+      emailRef.current!,
+    );
+    if (interview.success) {
+      speech(interview.data!.system);
+    }
+
+    const messages = await getMessages(
+      getKey(),
+      nameRef.current!,
+      emailRef.current!,
+    );
+    if (messages?.success) {
+      modifyMessage(messages.data!.messages);
+    }
+
+    setThinking(false);
   }
 
   return (
     <>
-      {/* Hidden audio element */}
-      <audio ref={audioRef} controls className="hidden" />
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center p-6">
         <div className="w-full rounded-xl bg-white p-6 shadow-sm md:p-8">
           <h1 className="mb-6 text-2xl font-bold text-[#3c3c3c] md:text-3xl">
@@ -283,15 +339,24 @@ export default function InterviewPage() {
                   {message.content}
                 </MessageBubble>
               ))}
-
+              {error && (
+                <p className="text-red-500">
+                  An error occured, please refresh the page
+                </p>
+              )}
+              {transcript && (
+                <UserThinking role={"test"}>{transcript}</UserThinking>
+              )}
               {loading && (
                 <SystemThinking role={"test"}>Loading</SystemThinking>
               )}
               {thinking && (
                 <SystemThinking role={"test"}>Thinking</SystemThinking>
               )}
-              {processing && (
-                <UserThinking role={"test"}>Processing</UserThinking>
+              {!start && !loading && (
+                <UserThinking role={"test"}>
+                  Press the "Start Interview" button to begin
+                </UserThinking>
               )}
             </div>
           </div>
@@ -313,7 +378,7 @@ export default function InterviewPage() {
             <div className="rounded-lg bg-[#f8f7f4] p-4 text-center">
               <div className="mb-2 font-medium text-[#8a7e6d]">Step 3</div>
               <p className="text-sm text-[#3c3c3c]">
-                Review your transcript when complete
+                Mute the microphone to send a reply
               </p>
             </div>
           </div>
@@ -321,22 +386,43 @@ export default function InterviewPage() {
           {/* Mic Button */}
           <div className="mt-6 flex justify-center">
             <div
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-[#8b5d3f] text-white shadow-md transition-all hover:bg-[#7a4e33] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3f] focus:ring-opacity-50"
+              className={cn(
+                "flex h-16 w-16 items-center justify-center",
+                start &&
+                  "rounded-full bg-[#8b5d3f] text-white shadow-md transition-all hover:bg-[#7a4e33] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3f] focus:ring-opacity-50",
+              )}
               aria-label="Start recording"
             >
-              <MicButton uploadAudio={sendAudio} />
+              <Button
+                className={cn(
+                  "flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]",
+                  start && "hidden",
+                )}
+                disabled={loading}
+                onClick={() => handleStartInterview()}
+              >
+                Start Interview
+              </Button>
+              <Button
+                size="lg"
+                variant={mic ? "destructive" : "default"}
+                className={cn(
+                  "h-16 w-16 rounded-full p-0",
+                  !mic && "bg-primary-400 hover:bg-primary-500",
+                  !start && "hidden",
+                )}
+                onClick={() => handleMic()}
+              >
+                {mic ? (
+                  <Mic className="h-6 w-6" />
+                ) : (
+                  <MicOff className="h-6 w-6" />
+                )}
+              </Button>
             </div>
           </div>
         </div>
       </main>
     </>
   );
-}
-
-function latin1ToUint8Array(str: string) {
-  const array = new Uint8Array(str.length);
-  for (let i = 0; i < str.length; i++) {
-    array[i] = str.charCodeAt(i);
-  }
-  return array;
 }

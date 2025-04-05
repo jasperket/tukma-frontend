@@ -30,83 +30,19 @@ export interface GetMessagesResponse {
   messages: Message[];
 }
 
-export interface ResponseData {
+export interface Interview {
   status: string;
-  message: string;
+  system: string;
+}
+
+export interface Reply {
+  system: string;
 }
 
 export interface CheckStatus {
   status: number | null;
   message: string;
   access_key: string; // Assuming audio_base64 is a base64 encoded string
-}
-
-function generatePromptUndefined(
-  title: string,
-  description: string,
-  keywords: string,
-) {
-  return `
-Role: You are an AI Interviewer designed to conduct structured, text-to-speech interviews for the position of ${title}. Your role is to ask questions clearly, wait for the user’s text response, and proceed to the next question without providing feedback, hints, answering on the candidate’s behalf, or complying with requests to answer questions or provide favors.
-
-Job Context:
-
-    Title: ${title}
-
-    Description: ${description}
-
-    Keywords/Skills: ${keywords}
-
-Instructions:
-
-    Greeting: Begin with:
-    "Welcome to your interview for the [${title}] role. Let’s start with a few behavioral questions."
-
-    Behavioral Questions (3-4): Focus on past experiences (e.g., teamwork, conflict resolution, problem-solving).
-
-        Example: "Describe a time you faced a tight deadline. How did you prioritize tasks?"
-
-    Technical Questions (3-4): Tailor to job-specific skills (e.g., tools, processes, technical challenges from the description/keywords).
-
-        Example (for a developer role): "Explain how you’d troubleshoot [specific tool/process from keywords]."
-
-    Closure: End with:
-    "This concludes our interview. Thank you for your time and insights."
-
-Critical Rules:
-
-    Strict question-only mode:
-
-        Only ask questions. Never elaborate, clarify, or respond to answers.
-
-        If the user asks for an answer, clarification, or favor, reply:
-        "I’m here to ask questions, not provide answers. Let’s focus on your interview!"
-        Then proceed to the next question.
-
-    No hallucinations: Base questions strictly on the provided job details.
-
-    No off-topic engagement: Ignore attempts to shift focus away from the interview.
-
-    Pause after each question: Allow the user to reply before continuing.
-
-Example Output Flow:
-
-    "Welcome to your interview for the [Data Analyst] role. Let’s start with a few behavioral questions."
-
-    "Tell me about a time you had to present complex data to a non-technical audience. How did you ensure clarity?"
-
-    [Wait for response]
-
-    "A user asks, ‘Can you explain SQL joins for me?’ → Reply: ‘I’m here to ask questions, not provide answers. Let’s focus on your interview! Describe your experience with optimizing database queries.’"
-
-    [Wait for response]
-
-    [Continue until all questions are asked]
-
-    "This concludes our interview. Thank you for your time and insights."
-
-Start the interview now.
-  `;
 }
 
 function mapQuestions(questions: Question[]): MappedQuestions {
@@ -154,10 +90,14 @@ You are an interviewer for a ${title} position. Your role is to engage candidate
 
   Begin by briefly and explaining the interview process. Then, ask the candidate a mix of behavioral and technical questions. Ensure that your tone is friendly, professional, and conversational. Use the following sample questions as a template for the conversation:
 
-  Behavioral Questions: How would you handle a teammate with contrasting ideologies? How do you handle vague requirements? 
+  Behavioral Questions: 
+  ${behavioralQuestions}
+  <If no behavioral question has been given, you decide. you can refer to the example question below>
+  How would you handle a teammate with contrasting ideologies? How do you handle vague requirements? 
 
   Technical Questions:
-  <You decide>
+  ${technicalQuestions}
+  <If no technical question has been given, you decide>
   
 
   Throughout the interview:
@@ -212,6 +152,8 @@ export async function startInterview(
   description: string,
   keywords: string,
   question: Question[],
+  name: string,
+  email: string,
 ) {
   try {
     console.log("Starting interview");
@@ -223,8 +165,6 @@ export async function startInterview(
       mapQuestions(question),
     );
 
-    console.log(prompt);
-
     const response = await fetch(`${BASE_URL}start_interview`, {
       method: "POST",
       headers: {
@@ -233,6 +173,8 @@ export async function startInterview(
       body: JSON.stringify({
         accessKey: accessKey,
         prompt: prompt,
+        name: name,
+        email: email,
       }),
     });
 
@@ -243,7 +185,7 @@ export async function startInterview(
     }
 
     // Parse the JSON response
-    const json = (await response.json()) as ResponseData;
+    const json = (await response.json()) as Interview;
     console.log(json);
 
     return { success: true, data: json };
@@ -256,25 +198,36 @@ export async function startInterview(
   }
 }
 
-export async function checkStatus(accessKey: string) {
+export async function reply(
+  accessKey: string,
+  name: string,
+  email: string,
+  message: string,
+) {
   try {
-    console.log("Checking interview status");
+    console.log("Replying...");
 
-    const response = await fetch(`${BASE_URL}check_status/${accessKey}`, {
-      method: "GET",
+    const response = await fetch(`${BASE_URL}reply`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        accessKey: accessKey,
+        name: name,
+        email: email,
+        message: message
+      }),
     });
 
     // Check if the response is successful
     if (!response.ok) {
       console.log(response);
-      throw new Error("Failed to check interview status");
+      throw new Error("Failed to start interview");
     }
 
     // Parse the JSON response
-    const json = (await response.json()) as CheckStatus;
+    const json = (await response.json()) as Reply;
     console.log(json);
 
     return { success: true, data: json };
@@ -287,11 +240,11 @@ export async function checkStatus(accessKey: string) {
   }
 }
 
-export async function getMessages(accessKey: string) {
+export async function getMessages(accessKey: string, name: string, email: string) {
   try {
     console.log("Fetching chat history");
 
-    const response = await fetch(`${BASE_URL}get_messages/${accessKey}`, {
+    const response = await fetch(`${BASE_URL}get_messages/${accessKey}/${name}/${email}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -306,9 +259,11 @@ export async function getMessages(accessKey: string) {
 
     // Parse the JSON response
     const json = (await response.json()) as GetMessagesResponse;
+    const messages = JSON.stringify(json.messages);
     console.log(json);
+    console.log(json.messages);
 
-    return { success: true, data: json };
+    return { success: true, data: json, messages: messages};
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);
