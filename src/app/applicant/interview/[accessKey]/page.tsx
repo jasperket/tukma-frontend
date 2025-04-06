@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode, useEffect, useRef, useState } from "react";
-import { Mic, MicOff } from "lucide-react";
+import { Mic, MicOff, XCircle } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import {
@@ -100,6 +100,7 @@ export default function InterviewPage() {
   const [mic, setMic] = useState<boolean>(false);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [start, setStart] = useState<boolean>(false);
+  const [interviewEnded, setInterviewEnded] = useState<boolean>(false);
 
   const [messages, setMessages] = useState<Message[]>();
   const [transcript, setTranscript] = useState<string>();
@@ -231,6 +232,17 @@ export default function InterviewPage() {
         if (response2.success) {
           setTranscript("");
           modifyMessage(response2.data!.messages);
+          
+          // Check if the interview has ended
+          const lastMessage = response2.data!.messages[response2.data!.messages.length - 1];
+          if (
+            lastMessage && 
+            lastMessage.role === "system" && 
+            (lastMessage.content.includes("Thank you for your time and insights") ||
+             lastMessage.content.includes("Goodbye"))
+          ) {
+            setInterviewEnded(true);
+          }
         }
         if (response.success) {
           speech(response.data!.system);
@@ -260,6 +272,11 @@ export default function InterviewPage() {
 
   function getKey(): string {
     return window.location.href.split("/").pop()!;
+  }
+
+  function handleEndInterview() {
+    console.log("Interview ended");
+    // In the future, this could navigate to a summary page or perform other actions
   }
 
   function handleMic() {
@@ -504,40 +521,44 @@ export default function InterviewPage() {
               </div>
             </div>
 
-            <div
-              className={cn(
-                "flex h-16 w-16 items-center justify-center",
-                start &&
-                  "rounded-full bg-[#8b5d3f] text-white shadow-md transition-all hover:bg-[#7a4e33] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3f] focus:ring-opacity-50",
+            <div className="flex items-center justify-center">
+              {!start ? (
+                <Button
+                  className="border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
+                  disabled={loading}
+                  onClick={() => handleStartInterview()}
+                >
+                  Start Interview
+                </Button>
+              ) : interviewEnded ? (
+                <Button
+                  className="border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
+                  onClick={handleEndInterview}
+                >
+                  End Interview
+                </Button>
+              ) : (
+                <div
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-[#8b5d3f] text-white shadow-md transition-all hover:bg-[#7a4e33] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3f] focus:ring-opacity-50"
+                  aria-label="Start recording"
+                >
+                  <Button
+                    size="lg"
+                    variant={mic ? "destructive" : "default"}
+                    className={cn(
+                      "h-16 w-16 rounded-full p-0",
+                      !mic && "bg-primary-400 hover:bg-primary-500"
+                    )}
+                    onClick={() => handleMic()}
+                  >
+                    {mic ? (
+                      <Mic className="h-6 w-6" />
+                    ) : (
+                      <MicOff className="h-6 w-6" />
+                    )}
+                  </Button>
+                </div>
               )}
-              aria-label="Start recording"
-            >
-              <Button
-                className={cn(
-                  "flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]",
-                  start && "hidden",
-                )}
-                disabled={loading}
-                onClick={() => handleStartInterview()}
-              >
-                Start Interview
-              </Button>
-              <Button
-                size="lg"
-                variant={mic ? "destructive" : "default"}
-                className={cn(
-                  "h-16 w-16 rounded-full p-0",
-                  !mic && "bg-primary-400 hover:bg-primary-500",
-                  !start && "hidden",
-                )}
-                onClick={() => handleMic()}
-              >
-                {mic ? (
-                  <Mic className="h-6 w-6" />
-                ) : (
-                  <MicOff className="h-6 w-6" />
-                )}
-              </Button>
             </div>
 
             {/* Right Waveform */}
