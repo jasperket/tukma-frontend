@@ -126,6 +126,7 @@ export default function InterviewPage() {
     if (recognition) {
       recognition.continuous = true; // Keep listening even after pauses
       recognition.lang = "en-US"; // Set the language
+      recognition.interimResults = true; // Set the language
       recognitionRef.current = recognition;
     }
 
@@ -314,7 +315,7 @@ export default function InterviewPage() {
     // Workaround for potential issues where queue isn't cleared
     synthRef.current.cancel();
     // setTimeout(() => synthRef.current?.speak(utterance), 50); // Tiny delay can sometimes help
-    synthRef.current?.speak(utterance)
+    synthRef.current?.speak(utterance);
   }
 
   async function handleStartInterview() {
@@ -379,7 +380,7 @@ export default function InterviewPage() {
                 </p>
               )}
               {transcript && (
-                <UserThinking role={"test"}>{transcript}</UserThinking>
+                <UserThinking role="test">{transcript}</UserThinking>
               )}
               {loading && (
                 <SystemThinking role={"test"}>Loading</SystemThinking>
