@@ -312,9 +312,6 @@ export default function InterviewPage() {
       console.log("Speech synthesis error:", event.error);
     };
 
-    // Workaround for potential issues where queue isn't cleared
-    synthRef.current.cancel();
-    // setTimeout(() => synthRef.current?.speak(utterance), 50); // Tiny delay can sometimes help
     synthRef.current?.speak(utterance);
   }
 
