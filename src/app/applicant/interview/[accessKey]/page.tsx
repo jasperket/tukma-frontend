@@ -98,6 +98,7 @@ export default function InterviewPage() {
   const [thinking, setThinking] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
   const [mic, setMic] = useState<boolean>(false);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [start, setStart] = useState<boolean>(false);
 
   const [messages, setMessages] = useState<Message[]>();
@@ -172,6 +173,24 @@ export default function InterviewPage() {
 
     init();
 
+    // Handle speech recognition start
+    recognition.onstart = () => {
+      console.log("Speech recognition started");
+      setMic(true);
+    };
+
+    // Handle when speech is detected
+    recognition.onspeechstart = () => {
+      console.log("Speech detected");
+      setIsSpeaking(true);
+    };
+
+    // Handle when speech ends
+    recognition.onspeechend = () => {
+      console.log("Speech ended");
+      setIsSpeaking(false);
+    };
+
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const combinedTranscript = Array.from(event.results)
         .map((result) => result[0]?.transcript) // Get transcript of the first alternative
@@ -186,6 +205,10 @@ export default function InterviewPage() {
     };
 
     recognition.onend = () => {
+      console.log("Speech recognition ended");
+      setMic(false);
+      // Make sure speaking is also set to false when recognition ends
+      setIsSpeaking(false);
       const currentTranscript = transcriptRef.current;
       setTranscript(currentTranscript);
 
@@ -240,11 +263,22 @@ export default function InterviewPage() {
   }
 
   function handleMic() {
-    setMic((prevMic) => !prevMic);
     if (!mic) {
-      recognitionRef.current?.start();
+      // Start speech recognition
+      try {
+        recognitionRef.current?.start();
+        // We don't set mic state here - it will be set in the onstart handler
+      } catch (error) {
+        console.error("Error starting speech recognition:", error);
+      }
     } else {
-      recognitionRef.current?.stop();
+      // Stop speech recognition
+      try {
+        recognitionRef.current?.stop();
+        // We don't set mic state here - it will be set in the onend handler
+      } catch (error) {
+        console.error("Error stopping speech recognition:", error);
+      }
     }
   }
 
@@ -384,7 +418,18 @@ export default function InterviewPage() {
           </div>
 
           {/* Mic Button */}
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex justify-center items-center gap-4">
+            {/* Left Waveform */}
+            <div className={cn("flex h-16 items-center transition-opacity duration-300", isSpeaking ? "opacity-100" : "opacity-0 invisible")}>
+              <div id="wave" className="mr-2">
+                <div className="wave0"></div>
+                <div className="wave1"></div>
+                <div className="wave2"></div>
+                <div className="wave3"></div>
+                <div className="wave4"></div>
+              </div>
+            </div>
+
             <div
               className={cn(
                 "flex h-16 w-16 items-center justify-center",
@@ -419,6 +464,17 @@ export default function InterviewPage() {
                   <MicOff className="h-6 w-6" />
                 )}
               </Button>
+            </div>
+            
+            {/* Right Waveform */}
+            <div className={cn("flex h-16 items-center transition-opacity duration-300", isSpeaking ? "opacity-100" : "opacity-0 invisible")}>
+              <div id="wave" className="ml-2">
+                <div className="wave4"></div>
+                <div className="wave3"></div>
+                <div className="wave2"></div>
+                <div className="wave1"></div>
+                <div className="wave0"></div>
+              </div>
             </div>
           </div>
         </div>
