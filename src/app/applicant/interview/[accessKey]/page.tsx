@@ -113,6 +113,8 @@ export default function InterviewPage() {
   const transcriptRef = useRef(transcript);
   const nameRef = useRef<string | null>(null);
   const emailRef = useRef<string | null>(null);
+  const chunksRef = useRef<string[]>([]);
+  const numberRef = useRef<number>(0);
 
   useEffect(() => {
     const accessKey = window.location.href.split("/").pop();
@@ -132,9 +134,6 @@ export default function InterviewPage() {
 
     if (synth) {
       synthRef.current = synth;
-      if (synthRef.current.speaking) {
-        synthRef.current.cancel();
-      }
     }
 
     if (!recognition) {
@@ -283,19 +282,23 @@ export default function InterviewPage() {
     }
   }
 
-  function handleStop() {
-    if (synthRef.current?.speaking) {
-      synthRef.current.cancel();
-    }
-  }
-
   function speech(text: string) {
-    if (!synthRef.current || !text) {
+    if (!synthRef.current || !text || text === undefined) {
       console.log("Synth not ready or no text to speak.");
       console.log(text);
       return;
     }
-    handleStop();
+    const chunks = splitTextIntoChunks(text);
+    chunksRef.current = chunks;
+    numberRef.current = 0;
+    utter(chunksRef.current[0]!);
+  }
+
+  function utter(text: string) {
+    if (!text) {
+      return;
+    }
+    synthRef.current?.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
@@ -307,12 +310,25 @@ export default function InterviewPage() {
     };
     utterance.onend = () => {
       console.log("Speech finished.");
+      synthRef.current?.cancel();
+      numberRef.current = numberRef.current + 1;
+      if (numberRef.current === chunksRef.current.length) {
+        numberRef.current = 0;
+        chunksRef.current = [];
+        return;
+      }
+      utter(chunksRef.current[numberRef.current]!);
     };
     utterance.onerror = (event) => {
+      console.log(error);
       console.log("Speech synthesis error:", event.error);
     };
 
-    synthRef.current?.speak(utterance);
+    console.log(utterance); //IMPORTANT!! Do not remove: Logging the object out fixes some onend firing issues.
+    //placing the speak invocation inside a callback fixes ordering and onend issues.
+    setTimeout(() => {
+      synthRef.current?.speak(utterance);
+    }, 0);
   }
 
   async function handleStartInterview() {
@@ -349,6 +365,61 @@ export default function InterviewPage() {
     }
 
     setThinking(false);
+  }
+
+  function splitTextIntoChunks(
+    text: string,
+    maxLength: number = 200,
+  ): string[] {
+    if (!text) {
+      return []; // Return empty array for null, undefined, or empty input
+    }
+
+    // Ensure maxLength is at least 1
+    if (maxLength < 1) {
+      throw new Error("maxLength must be at least 1.");
+    }
+
+    const maxChunkLength = maxLength - 1; // Actual max characters per chunk (e.g., 199)
+    const chunks: string[] = [];
+    let startIndex = 0;
+
+    while (startIndex < text.length) {
+      // If the remaining text is within the allowed length, it's the last chunk
+      if (text.length - startIndex <= maxChunkLength) {
+        chunks.push(text.substring(startIndex));
+        break; // Exit the loop
+      }
+
+      // Determine the potential end index for the slice (exclusive)
+      // We look for a split point *up to* maxChunkLength characters away
+      let potentialEndIndex = startIndex + maxChunkLength;
+
+      // Find the last space character at or before the potential end index
+      let lastSpaceIndex = text.lastIndexOf(" ", potentialEndIndex);
+
+      let chunkEndIndex: number;
+
+      // Check if a suitable space was found within the current segment's range
+      if (lastSpaceIndex > startIndex) {
+        // Found a space, split there. The chunk ends *at* the space.
+        chunkEndIndex = lastSpaceIndex;
+        // The next chunk should start *after* the space
+        const chunk = text.substring(startIndex, chunkEndIndex);
+        chunks.push(chunk);
+        startIndex = chunkEndIndex + 1; // Move past the space
+      } else {
+        // No suitable space found within the limit [startIndex, potentialEndIndex].
+        // Perform a hard cut at maxChunkLength.
+        chunkEndIndex = startIndex + maxChunkLength; // End index for substring
+        const chunk = text.substring(startIndex, chunkEndIndex);
+        chunks.push(chunk);
+        startIndex = chunkEndIndex; // Start the next chunk immediately after the cut
+      }
+    }
+
+    console.log(chunks);
+    return chunks;
   }
 
   return (
@@ -416,9 +487,14 @@ export default function InterviewPage() {
           </div>
 
           {/* Mic Button */}
-          <div className="mt-6 flex justify-center items-center gap-4">
+          <div className="mt-6 flex items-center justify-center gap-4">
             {/* Left Waveform */}
-            <div className={cn("flex h-16 items-center transition-opacity duration-300", isSpeaking ? "opacity-100" : "opacity-0 invisible")}>
+            <div
+              className={cn(
+                "flex h-16 items-center transition-opacity duration-300",
+                isSpeaking ? "opacity-100" : "invisible opacity-0",
+              )}
+            >
               <div id="wave" className="mr-2">
                 <div className="wave0"></div>
                 <div className="wave1"></div>
@@ -463,9 +539,14 @@ export default function InterviewPage() {
                 )}
               </Button>
             </div>
-            
+
             {/* Right Waveform */}
-            <div className={cn("flex h-16 items-center transition-opacity duration-300", isSpeaking ? "opacity-100" : "opacity-0 invisible")}>
+            <div
+              className={cn(
+                "flex h-16 items-center transition-opacity duration-300",
+                isSpeaking ? "opacity-100" : "invisible opacity-0",
+              )}
+            >
               <div id="wave" className="ml-2">
                 <div className="wave4"></div>
                 <div className="wave3"></div>
