@@ -369,7 +369,7 @@ export default function InterviewPage() {
 
   function splitTextIntoChunks(
     text: string,
-    maxLength: number = 200,
+    maxLength = 200,
   ): string[] {
     if (!text) {
       return []; // Return empty array for null, undefined, or empty input
@@ -393,10 +393,10 @@ export default function InterviewPage() {
 
       // Determine the potential end index for the slice (exclusive)
       // We look for a split point *up to* maxChunkLength characters away
-      let potentialEndIndex = startIndex + maxChunkLength;
+      const potentialEndIndex = startIndex + maxChunkLength;
 
       // Find the last space character at or before the potential end index
-      let lastSpaceIndex = text.lastIndexOf(" ", potentialEndIndex);
+      const lastSpaceIndex = text.lastIndexOf(" ", potentialEndIndex);
 
       let chunkEndIndex: number;
 
