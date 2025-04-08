@@ -18,7 +18,11 @@ import { getUserInfo } from "~/app/actions/auth";
 import { Label } from "@radix-ui/react-label";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { useRouter } from "next/navigation";
-import { getAllQuestions, submitSurvey } from "~/app/actions/survey";
+import {
+  getAllQuestions,
+  submitSurvey,
+  Question as SurveyQuestion,
+} from "~/app/actions/survey";
 
 interface Props {
   children: ReactNode;
@@ -126,7 +130,7 @@ export default function InterviewPage() {
   const [responses, setResponses] = useState<Record<number, number>>({});
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [submittingSurvey, setSubmittingSurvey] = useState<boolean>(false);
-  const [surveyQuestions, setSurveyQuestions] = useState<any[]>([]);
+  const [surveyQuestions, setSurveyQuestions] = useState<SurveyQuestion[]>([]);
 
   const [messages, setMessages] = useState<Message[]>();
   const [transcript, setTranscript] = useState<string>();
@@ -210,7 +214,7 @@ export default function InterviewPage() {
         if (surveyResponse.success && surveyResponse.data) {
           setSurveyQuestions(surveyResponse.data);
         }
-        
+
         setLoading(false);
         return;
       }
@@ -408,24 +412,30 @@ export default function InterviewPage() {
 
   const handleSubmitSurvey = async () => {
     setSubmittingSurvey(true);
-    
+
     try {
       // Convert responses object to array format expected by the API
-      const answersArray = Object.entries(responses).map(([questionIndex, score]) => {
-        // Using SUS questions from the array if we don't have actual survey questions from the API
-        const questionId = surveyQuestions.length > parseInt(questionIndex) 
-          ? surveyQuestions[parseInt(questionIndex)].id
-          : parseInt(questionIndex) + 1; // Fallback to using index + 1 if we don't have actual question IDs
-        
-        return {
-          questionId: questionId,
-          score: score
-        };
-      });
-      
+      const answersArray = Object.entries(responses).map(
+        ([questionIndex, score]) => {
+          // Using SUS questions from the array if we don't have actual survey questions from the API
+          const parsedIndex = parseInt(questionIndex);
+          const questionId =
+            surveyQuestions &&
+            surveyQuestions.length > parsedIndex &&
+            surveyQuestions[parsedIndex] // Check bounds and existence first
+              ? surveyQuestions[parsedIndex].id // Safe to access .id here (added non-null assertion !)
+              : parseInt(questionIndex) + 1; // Fallback to using index + 1 if we don't have actual question IDs
+
+          return {
+            questionId: questionId,
+            score: score,
+          };
+        },
+      );
+
       // Submit survey answers to the API
       const result = await submitSurvey(answersArray);
-      
+
       if (result.success) {
         setSurveySubmitted(true);
         setShowSurvey(false);
@@ -441,7 +451,7 @@ export default function InterviewPage() {
       setSubmittingSurvey(false);
     }
   };
-  
+
   const handleFinish = () => {
     router.push(`/applicant/view/${getKey()}`);
   };
@@ -540,111 +550,118 @@ export default function InterviewPage() {
             </div>
           </div>
 
-          {!showSurvey && !surveySubmitted && interview_status === "finished" && (
-            <div className="mb-8 space-y-6">
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                <h3 className="mb-2 font-medium text-amber-800">
-                  Interview Complete
-                </h3>
-                <p className="text-sm text-amber-700">
-                  Thank you for participating in our interview. Please complete
-                  a short System Usability Scale (SUS) survey to help us
-                  evaluate the system.
-                </p>
-              </div>
-
-              <Button
-                onClick={() => setShowSurvey(true)}
-                className="w-full bg-[#b78467] hover:bg-[#a07358]"
-              >
-                Start System Usability Survey{" "}
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {showSurvey && !surveySubmitted && interview_status === "finished" && (
-            <div className="mb-8 space-y-6">
-              <h2 className="text-xl font-medium">
-                System Usability Scale (SUS)
-              </h2>
-
-              <div className="mb-6">
-                <h3 className="mb-4 text-lg font-medium">
-                  Question {currentQuestion + 1} of {susQuestions.length}
-                </h3>
-                <p className="mb-4 text-gray-700">
-                  {susQuestions[currentQuestion]}
-                </p>
-              </div>
-
-              <RadioGroup
-                value={responses[currentQuestion]?.toString() ?? ""}
-                onValueChange={handleResponse}
-                className="space-y-3"
-              >
-                <div className="mb-2 flex justify-between text-sm text-gray-500">
-                  <span>Strongly Disagree</span>
-                  <span>Strongly Agree</span>
+          {!showSurvey &&
+            !surveySubmitted &&
+            interview_status === "finished" && (
+              <div className="mb-8 space-y-6">
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <h3 className="mb-2 font-medium text-amber-800">
+                    Interview Complete
+                  </h3>
+                  <p className="text-sm text-amber-700">
+                    Thank you for participating in our interview. Please
+                    complete a short System Usability Scale (SUS) survey to help
+                    us evaluate the system.
+                  </p>
                 </div>
-                <div className="flex justify-between gap-2">
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <div key={value} className="flex flex-col items-center">
-                      <RadioGroupItem
-                        value={value.toString()}
-                        id={`q${currentQuestion}-${value}`}
-                        className="mb-1"
-                      />
-                      <Label
-                        htmlFor={`q${currentQuestion}-${value}`}
-                        className="text-sm"
-                      >
-                        {value}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </RadioGroup>
 
-              <div className="flex justify-between">
                 <Button
-                  variant="outline"
-                  onClick={() =>
-                    currentQuestion > 0 &&
-                    setCurrentQuestion(currentQuestion - 1)
-                  }
-                  disabled={currentQuestion === 0}
+                  onClick={() => setShowSurvey(true)}
+                  className="w-full bg-[#b78467] hover:bg-[#a07358]"
                 >
-                  Previous
+                  Start System Usability Survey{" "}
+                  <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
-
-                {currentQuestion < susQuestions.length - 1 ? (
-                  <Button
-                    className="bg-[#b78467] hover:bg-[#a07358]"
-                    onClick={handleNextQuestion}
-                    disabled={responses[currentQuestion] === undefined}
-                  >
-                    Next
-                  </Button>
-                ) : (
-                  <Button
-                    className="bg-[#b78467] hover:bg-[#a07358]"
-                    onClick={handleSubmitSurvey}
-                    disabled={responses[currentQuestion] === undefined || submittingSurvey}
-                  >
-                    {submittingSurvey ? (
-                      <div className="flex items-center gap-2">
-                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                        <span>Submitting...</span>
-                      </div>
-                    ) : (
-                      "Submit Survey"
-                    )}
-                  </Button>
-                )}
               </div>
-            </div>
-          )}
+            )}
+
+          {showSurvey &&
+            !surveySubmitted &&
+            interview_status === "finished" && (
+              <div className="mb-8 space-y-6">
+                <h2 className="text-xl font-medium">
+                  System Usability Scale (SUS)
+                </h2>
+
+                <div className="mb-6">
+                  <h3 className="mb-4 text-lg font-medium">
+                    Question {currentQuestion + 1} of {susQuestions.length}
+                  </h3>
+                  <p className="mb-4 text-gray-700">
+                    {susQuestions[currentQuestion]}
+                  </p>
+                </div>
+
+                <RadioGroup
+                  value={responses[currentQuestion]?.toString() ?? ""}
+                  onValueChange={handleResponse}
+                  className="space-y-3"
+                >
+                  <div className="mb-2 flex justify-between text-sm text-gray-500">
+                    <span>Strongly Disagree</span>
+                    <span>Strongly Agree</span>
+                  </div>
+                  <div className="flex justify-between gap-2">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <div key={value} className="flex flex-col items-center">
+                        <RadioGroupItem
+                          value={value.toString()}
+                          id={`q${currentQuestion}-${value}`}
+                          className="mb-1"
+                        />
+                        <Label
+                          htmlFor={`q${currentQuestion}-${value}`}
+                          className="text-sm"
+                        >
+                          {value}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </RadioGroup>
+
+                <div className="flex justify-between">
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      currentQuestion > 0 &&
+                      setCurrentQuestion(currentQuestion - 1)
+                    }
+                    disabled={currentQuestion === 0}
+                  >
+                    Previous
+                  </Button>
+
+                  {currentQuestion < susQuestions.length - 1 ? (
+                    <Button
+                      className="bg-[#b78467] hover:bg-[#a07358]"
+                      onClick={handleNextQuestion}
+                      disabled={responses[currentQuestion] === undefined}
+                    >
+                      Next
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-[#b78467] hover:bg-[#a07358]"
+                      onClick={handleSubmitSurvey}
+                      disabled={
+                        responses[currentQuestion] === undefined ||
+                        submittingSurvey
+                      }
+                    >
+                      {submittingSurvey ? (
+                        <div className="flex items-center gap-2">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                          <span>Submitting...</span>
+                        </div>
+                      ) : (
+                        "Submit Survey"
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
 
           {surveySubmitted && interview_status === "finished" && (
             <div className="mb-8 text-center">
@@ -656,7 +673,10 @@ export default function InterviewPage() {
                 Thank you for completing the System Usability Scale survey. Your
                 feedback is valuable to us.
               </p>
-              <Button className="w-full bg-[#b78467] hover:bg-[#a07358]" onClick={() => handleFinish()}>
+              <Button
+                className="w-full bg-[#b78467] hover:bg-[#a07358]"
+                onClick={() => handleFinish()}
+              >
                 Finish
               </Button>
             </div>
