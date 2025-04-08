@@ -18,6 +18,7 @@ import { getUserInfo } from "~/app/actions/auth";
 import { Label } from "@radix-ui/react-label";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { useRouter } from "next/navigation";
+import { getAllQuestions, submitSurvey } from "~/app/actions/survey";
 
 interface Props {
   children: ReactNode;
@@ -36,10 +37,6 @@ const susQuestions = [
   "I felt very confident using the system.",
   "I needed to learn a lot of things before I could get going with this system.",
 ];
-
-const Survey: React.FC = () => {
-  return <></>;
-};
 
 const UserThinking: React.FC<Props> = ({ children, role }) => {
   return (
@@ -128,6 +125,8 @@ export default function InterviewPage() {
   const [surveySubmitted, setSurveySubmitted] = useState<boolean>(false);
   const [responses, setResponses] = useState<Record<number, number>>({});
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
+  const [submittingSurvey, setSubmittingSurvey] = useState<boolean>(false);
+  const [surveyQuestions, setSurveyQuestions] = useState<any[]>([]);
 
   const [messages, setMessages] = useState<Message[]>();
   const [transcript, setTranscript] = useState<string>();
@@ -206,6 +205,12 @@ export default function InterviewPage() {
       modifyMessage(msg_response.data!.messages);
 
       if (in_stats.data?.status === "finished") {
+        // Get survey questions if interview is finished
+        const surveyResponse = await getAllQuestions();
+        if (surveyResponse.success && surveyResponse.data) {
+          setSurveyQuestions(surveyResponse.data);
+        }
+        
         setLoading(false);
         return;
       }
@@ -376,8 +381,7 @@ export default function InterviewPage() {
       utter(chunksRef.current[numberRef.current]!);
     };
     utterance.onerror = (event) => {
-      console.log(error);
-      console.log("Speech synthesis error:", event.error);
+      console.error("Speech synthesis error:", event.error);
     };
 
     console.log(utterance); //IMPORTANT!! Do not remove: Logging the object out fixes some onend firing issues.
@@ -402,9 +406,40 @@ export default function InterviewPage() {
     init();
   }
 
-  const handleSubmitSurvey = () => {
-    setSurveySubmitted(true);
-    setShowSurvey(false);
+  const handleSubmitSurvey = async () => {
+    setSubmittingSurvey(true);
+    
+    try {
+      // Convert responses object to array format expected by the API
+      const answersArray = Object.entries(responses).map(([questionIndex, score]) => {
+        // Using SUS questions from the array if we don't have actual survey questions from the API
+        const questionId = surveyQuestions.length > parseInt(questionIndex) 
+          ? surveyQuestions[parseInt(questionIndex)].id
+          : parseInt(questionIndex) + 1; // Fallback to using index + 1 if we don't have actual question IDs
+        
+        return {
+          questionId: questionId,
+          score: score
+        };
+      });
+      
+      // Submit survey answers to the API
+      const result = await submitSurvey(answersArray);
+      
+      if (result.success) {
+        setSurveySubmitted(true);
+        setShowSurvey(false);
+      } else {
+        console.error("Error submitting survey:", result.error);
+        // Show error message to user
+        alert("There was an error submitting your survey. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error in survey submission:", error);
+      alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setSubmittingSurvey(false);
+    }
   };
   
   const handleFinish = () => {
@@ -595,9 +630,16 @@ export default function InterviewPage() {
                   <Button
                     className="bg-[#b78467] hover:bg-[#a07358]"
                     onClick={handleSubmitSurvey}
-                    disabled={responses[currentQuestion] === undefined}
+                    disabled={responses[currentQuestion] === undefined || submittingSurvey}
                   >
-                    Submit Survey
+                    {submittingSurvey ? (
+                      <div className="flex items-center gap-2">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                        <span>Submitting...</span>
+                      </div>
+                    ) : (
+                      "Submit Survey"
+                    )}
                   </Button>
                 )}
               </div>
