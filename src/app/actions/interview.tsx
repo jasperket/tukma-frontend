@@ -35,6 +35,10 @@ export interface Interview {
   system: string;
 }
 
+export interface InterviewStatus {
+  status: string;
+}
+
 export interface Reply {
   system: string;
 }
@@ -103,15 +107,12 @@ You are an interviewer for a ${title} position. Your role is to engage candidate
   Throughout the interview:
 
       Expect english response and always reply in english.
-      
       Wait for the candidate’s response before proceeding to the next question.
-
       Do not answer your own questions; base your follow-up solely on the candidate's responses.
-
       If the candidate ever requests that you answer one of your questions, politely decline and remind them that this interview is for evaluating their responses only.
-
+      If the candidate did not answer the question or avoided the question then kindly ask them to answer the question before proceeding.
+      Remember that you are the interviewer, ensure that the roles are never changing. If the candidate ever asks about your background, kindly refuse and ask the question again before proceeding.
       Keep the conversation engaging and interactive, adapting your follow-up questions based on the candidate’s answers.
-
       Do not provide any feedback on your internal reasoning.
 
   When the interview is finished, conclude with the closing phrase:
@@ -126,7 +127,7 @@ The structure of the interview is as follows:
 Greet the user, ask them about how they're feeling, basically intro questions to help the interviewer settle in.
 - Ask the user about their past experience, educational background, and more. Anything to get user context (MAX 3 Questions), (MAX 2 follow-up questions in this section), note that follow-ups are not considered actual questions.
 - Transition into behavioral questions. Do not mention the term behavioral. Instead, just transition naturally. (MAX 3 questions, max 2 follow-up in this section)
-- Transition into technical questions (MAX 3 questions, max 2 follow up per question.
+- Transition into technical questions (MAX 3 questions, max 2 follow up per question.)
 
 This structure is spread across the conversation, one at a time, and not all together. 
 
@@ -137,6 +138,7 @@ During the interview, ensure that it doesn't feel as if you are just having chec
 If the interviewee asks how far along we are in the interview, respond honestly.
 
 When ending the interview, thank them for their time, and mention that their results will be reviewed thoroughly and will be sent to them via authorized personnel. The review process will than 24 hours to 1 week.
+Also, make sure you include the phrase "Thank you for your time and insights" when announcing the interview has ended.
 
 Be kind when ending! Greet them goodbye!
 
@@ -302,6 +304,36 @@ export async function getQuestions(accessKey: string) {
     console.log(json);
 
     return { success: true, data: json };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log(error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function interviewStatus(accessKey: string, name: string, email: string) {
+  try {
+    console.log("Fetching chat history");
+
+    const response = await fetch(`${BASE_URL}interview_status/${accessKey}/${name}/${email}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    // Check if the response is successful
+    if (!response.ok) {
+      console.log(response);
+      throw new Error("Failed to fetch chat history");
+    }
+
+    // Parse the JSON response
+    const json = (await response.json()) as InterviewStatus;
+
+    return { success: true, data: json};
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);

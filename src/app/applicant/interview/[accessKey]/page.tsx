@@ -1,25 +1,45 @@
 "use client";
 
 import React, { ReactNode, useEffect, useRef, useState } from "react";
-import { Mic, MicOff, XCircle } from "lucide-react";
+import { CheckCircle, ChevronRight, Mic, MicOff, XCircle } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import {
-  CheckStatus,
   getMessages,
   getQuestions,
+  interviewStatus,
   Message,
   Question,
   reply,
   startInterview,
 } from "~/app/actions/interview";
 import { getJobDetails, JobWithKeywords } from "~/app/actions/recruiter";
-import { getUserInfo, UserDetailsWrapper } from "~/app/actions/auth";
+import { getUserInfo } from "~/app/actions/auth";
+import { Label } from "@radix-ui/react-label";
+import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
+import { useRouter } from "next/navigation";
 
 interface Props {
   children: ReactNode;
   role: string;
 }
+
+const susQuestions = [
+  "I think that I would like to use this system frequently.",
+  "I found the system unnecessarily complex.",
+  "I thought the system was easy to use.",
+  "I think that I would need the support of a technical person to be able to use this system.",
+  "I found the various functions in this system were well integrated.",
+  "I thought there was too much inconsistency in this system.",
+  "I would imagine that most people would learn to use this system very quickly.",
+  "I found the system very cumbersome to use.",
+  "I felt very confident using the system.",
+  "I needed to learn a lot of things before I could get going with this system.",
+];
+
+const Survey: React.FC = () => {
+  return <></>;
+};
 
 const UserThinking: React.FC<Props> = ({ children, role }) => {
   return (
@@ -94,13 +114,20 @@ const MessageBubble: React.FC<Props> = ({ children, role }) => {
 };
 
 export default function InterviewPage() {
+  const router = useRouter();
+
   const [loading, setLoading] = useState<boolean>(true);
   const [thinking, setThinking] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
   const [mic, setMic] = useState<boolean>(false);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
-  const [start, setStart] = useState<boolean>(false);
-  const [interviewEnded, setInterviewEnded] = useState<boolean>(false);
+  const [interview_status, setInterviewStatus] =
+    useState<string>("uninitiated");
+
+  const [showSurvey, setShowSurvey] = useState<boolean>(false);
+  const [surveySubmitted, setSurveySubmitted] = useState<boolean>(false);
+  const [responses, setResponses] = useState<Record<number, number>>({});
+  const [currentQuestion, setCurrentQuestion] = useState<number>(0);
 
   const [messages, setMessages] = useState<Message[]>();
   const [transcript, setTranscript] = useState<string>();
@@ -145,18 +172,7 @@ export default function InterviewPage() {
 
     async function init() {
       const userInfo = await getUserInfo();
-      const job = await getJobDetails(accessKey!);
-      const question = await getQuestions(accessKey!);
-
       if (!userInfo.success) {
-        setError(true);
-        return;
-      }
-      if (!job.success) {
-        setError(true);
-        return;
-      }
-      if (!question.success) {
         setError(true);
         return;
       }
@@ -166,6 +182,45 @@ export default function InterviewPage() {
         " " +
         userInfo.data!.userDetails.lastName;
       emailRef.current = userInfo.data!.userDetails.username;
+
+      const in_stats = await interviewStatus(
+        accessKey!,
+        nameRef.current,
+        emailRef.current,
+      );
+      if (!in_stats.success) {
+        setError(true);
+        return;
+      }
+      setInterviewStatus(in_stats.data!.status);
+
+      const msg_response = await getMessages(
+        accessKey!,
+        nameRef.current,
+        emailRef.current,
+      );
+      if (!msg_response.success) {
+        setError(true);
+        return;
+      }
+      modifyMessage(msg_response.data!.messages);
+
+      if (in_stats.data?.status === "finished") {
+        setLoading(false);
+        return;
+      }
+
+      const job = await getJobDetails(accessKey!);
+      const question = await getQuestions(accessKey!);
+      if (!job.success) {
+        setError(true);
+        return;
+      }
+      if (!question.success) {
+        setError(true);
+        return;
+      }
+
       setJob(job.job);
       setQuestion(question.data);
 
@@ -232,17 +287,6 @@ export default function InterviewPage() {
         if (response2.success) {
           setTranscript("");
           modifyMessage(response2.data!.messages);
-          
-          // Check if the interview has ended
-          const lastMessage = response2.data!.messages[response2.data!.messages.length - 1];
-          if (
-            lastMessage && 
-            lastMessage.role === "system" && 
-            (lastMessage.content.includes("Thank you for your time and insights") ||
-             lastMessage.content.includes("Goodbye"))
-          ) {
-            setInterviewEnded(true);
-          }
         }
         if (response.success) {
           speech(response.data!.system);
@@ -272,11 +316,6 @@ export default function InterviewPage() {
 
   function getKey(): string {
     return window.location.href.split("/").pop()!;
-  }
-
-  function handleEndInterview() {
-    console.log("Interview ended");
-    // In the future, this could navigate to a summary page or perform other actions
   }
 
   function handleMic() {
@@ -346,10 +385,34 @@ export default function InterviewPage() {
     setTimeout(() => {
       synthRef.current?.speak(utterance);
     }, 0);
+
+    async function init() {
+      const interview_status = await interviewStatus(
+        getKey(),
+        nameRef.current!,
+        emailRef.current!,
+      );
+      if (!interview_status.success) {
+        setError(true);
+        return;
+      }
+      setInterviewStatus(interview_status.data!.status);
+    }
+
+    init();
   }
 
+  const handleSubmitSurvey = () => {
+    setSurveySubmitted(true);
+    setShowSurvey(false);
+  };
+  
+  const handleFinish = () => {
+    router.push(`/applicant/view/${getKey()}`);
+  };
+
   async function handleStartInterview() {
-    setStart(true);
+    setInterviewStatus("started");
 
     const title = job?.job.title;
     const description = job?.job.description;
@@ -384,60 +447,20 @@ export default function InterviewPage() {
     setThinking(false);
   }
 
-  function splitTextIntoChunks(
-    text: string,
-    maxLength = 200,
-  ): string[] {
-    if (!text) {
-      return []; // Return empty array for null, undefined, or empty input
+  const handleNextQuestion = () => {
+    if (currentQuestion < susQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
     }
+  };
 
-    // Ensure maxLength is at least 1
-    if (maxLength < 1) {
-      throw new Error("maxLength must be at least 1.");
-    }
-
-    const maxChunkLength = maxLength - 1; // Actual max characters per chunk (e.g., 199)
-    const chunks: string[] = [];
-    let startIndex = 0;
-
-    while (startIndex < text.length) {
-      // If the remaining text is within the allowed length, it's the last chunk
-      if (text.length - startIndex <= maxChunkLength) {
-        chunks.push(text.substring(startIndex));
-        break; // Exit the loop
-      }
-
-      // Determine the potential end index for the slice (exclusive)
-      // We look for a split point *up to* maxChunkLength characters away
-      const potentialEndIndex = startIndex + maxChunkLength;
-
-      // Find the last space character at or before the potential end index
-      const lastSpaceIndex = text.lastIndexOf(" ", potentialEndIndex);
-
-      let chunkEndIndex: number;
-
-      // Check if a suitable space was found within the current segment's range
-      if (lastSpaceIndex > startIndex) {
-        // Found a space, split there. The chunk ends *at* the space.
-        chunkEndIndex = lastSpaceIndex;
-        // The next chunk should start *after* the space
-        const chunk = text.substring(startIndex, chunkEndIndex);
-        chunks.push(chunk);
-        startIndex = chunkEndIndex + 1; // Move past the space
-      } else {
-        // No suitable space found within the limit [startIndex, potentialEndIndex].
-        // Perform a hard cut at maxChunkLength.
-        chunkEndIndex = startIndex + maxChunkLength; // End index for substring
-        const chunk = text.substring(startIndex, chunkEndIndex);
-        chunks.push(chunk);
-        startIndex = chunkEndIndex; // Start the next chunk immediately after the cut
-      }
-    }
-
-    console.log(chunks);
-    return chunks;
-  }
+  const handleResponse = (value: string) => {
+    const numValue = Number.parseInt(value);
+    setResponses({
+      ...responses,
+      [currentQuestion]: numValue,
+    });
+    // Removed auto-advancement to next question
+  };
 
   return (
     <>
@@ -454,11 +477,12 @@ export default function InterviewPage() {
               ref={chatContainerRef}
               style={{ scrollBehavior: "smooth" }}
             >
-              {messages?.map((message) => (
-                <MessageBubble key={message.id} role={message.role}>
-                  {message.content}
-                </MessageBubble>
-              ))}
+              {!loading &&
+                messages?.map((message) => (
+                  <MessageBubble key={message.id} role={message.role}>
+                    {message.content}
+                  </MessageBubble>
+                ))}
               {error && (
                 <p className="text-red-500">
                   An error occured, please refresh the page
@@ -473,13 +497,128 @@ export default function InterviewPage() {
               {thinking && (
                 <SystemThinking role={"test"}>Thinking</SystemThinking>
               )}
-              {!start && !loading && (
+              {interview_status === "uninitiated" && !loading && (
                 <UserThinking role={"test"}>
                   Press the &quot;Start Interview&quot; button to begin
                 </UserThinking>
               )}
             </div>
           </div>
+
+          {!showSurvey && !surveySubmitted && interview_status === "finished" && (
+            <div className="mb-8 space-y-6">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <h3 className="mb-2 font-medium text-amber-800">
+                  Interview Complete
+                </h3>
+                <p className="text-sm text-amber-700">
+                  Thank you for participating in our interview. Please complete
+                  a short System Usability Scale (SUS) survey to help us
+                  evaluate the system.
+                </p>
+              </div>
+
+              <Button
+                onClick={() => setShowSurvey(true)}
+                className="w-full bg-[#b78467] hover:bg-[#a07358]"
+              >
+                Start System Usability Survey{" "}
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
+          {showSurvey && !surveySubmitted && interview_status === "finished" && (
+            <div className="mb-8 space-y-6">
+              <h2 className="text-xl font-medium">
+                System Usability Scale (SUS)
+              </h2>
+
+              <div className="mb-6">
+                <h3 className="mb-4 text-lg font-medium">
+                  Question {currentQuestion + 1} of {susQuestions.length}
+                </h3>
+                <p className="mb-4 text-gray-700">
+                  {susQuestions[currentQuestion]}
+                </p>
+              </div>
+
+              <RadioGroup
+                value={responses[currentQuestion]?.toString() ?? ""}
+                onValueChange={handleResponse}
+                className="space-y-3"
+              >
+                <div className="mb-2 flex justify-between text-sm text-gray-500">
+                  <span>Strongly Disagree</span>
+                  <span>Strongly Agree</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <div key={value} className="flex flex-col items-center">
+                      <RadioGroupItem
+                        value={value.toString()}
+                        id={`q${currentQuestion}-${value}`}
+                        className="mb-1"
+                      />
+                      <Label
+                        htmlFor={`q${currentQuestion}-${value}`}
+                        className="text-sm"
+                      >
+                        {value}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
+
+              <div className="flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    currentQuestion > 0 &&
+                    setCurrentQuestion(currentQuestion - 1)
+                  }
+                  disabled={currentQuestion === 0}
+                >
+                  Previous
+                </Button>
+
+                {currentQuestion < susQuestions.length - 1 ? (
+                  <Button
+                    className="bg-[#b78467] hover:bg-[#a07358]"
+                    onClick={handleNextQuestion}
+                    disabled={responses[currentQuestion] === undefined}
+                  >
+                    Next
+                  </Button>
+                ) : (
+                  <Button
+                    className="bg-[#b78467] hover:bg-[#a07358]"
+                    onClick={handleSubmitSurvey}
+                    disabled={responses[currentQuestion] === undefined}
+                  >
+                    Submit Survey
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {surveySubmitted && interview_status === "finished" && (
+            <div className="mb-8 text-center">
+              <div className="mb-4 inline-flex rounded-full bg-green-100 p-3">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+              </div>
+              <h2 className="mb-2 text-xl font-bold">Survey Submitted</h2>
+              <p className="mb-6 text-gray-600">
+                Thank you for completing the System Usability Scale survey. Your
+                feedback is valuable to us.
+              </p>
+              <Button className="w-full bg-[#b78467] hover:bg-[#a07358]" onClick={() => handleFinish()}>
+                Finish
+              </Button>
+            </div>
+          )}
 
           {/* Instructions */}
           <div className="mb-8 grid gap-6 md:grid-cols-3">
@@ -522,7 +661,7 @@ export default function InterviewPage() {
             </div>
 
             <div className="flex items-center justify-center">
-              {!start ? (
+              {interview_status === "uninitiated" && (
                 <Button
                   className="border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
                   disabled={loading}
@@ -530,34 +669,42 @@ export default function InterviewPage() {
                 >
                   Start Interview
                 </Button>
-              ) : interviewEnded ? (
+              )}
+              {interview_status === "started" && (
                 <Button
-                  className="border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
-                  onClick={handleEndInterview}
+                  size="lg"
+                  disabled={loading}
+                  variant={mic ? "destructive" : "default"}
+                  className={cn(
+                    "h-16 w-16 rounded-full p-0",
+                    !mic && "bg-primary-400 hover:bg-primary-500",
+                  )}
+                  onClick={() => handleMic()}
                 >
-                  End Interview
+                  {mic ? (
+                    <Mic className="h-6 w-6" />
+                  ) : (
+                    <MicOff className="h-6 w-6" />
+                  )}
                 </Button>
-              ) : (
-                <div
-                  className="flex h-16 w-16 items-center justify-center rounded-full bg-[#8b5d3f] text-white shadow-md transition-all hover:bg-[#7a4e33] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#8b5d3f] focus:ring-opacity-50"
-                  aria-label="Start recording"
+              )}
+              {interview_status === "finished" && (
+                <Button
+                  size="lg"
+                  disabled={true}
+                  variant={mic ? "destructive" : "default"}
+                  className={cn(
+                    "h-16 w-16 rounded-full p-0",
+                    !mic && "bg-primary-400 hover:bg-primary-500",
+                  )}
+                  onClick={() => handleMic()}
                 >
-                  <Button
-                    size="lg"
-                    variant={mic ? "destructive" : "default"}
-                    className={cn(
-                      "h-16 w-16 rounded-full p-0",
-                      !mic && "bg-primary-400 hover:bg-primary-500"
-                    )}
-                    onClick={() => handleMic()}
-                  >
-                    {mic ? (
-                      <Mic className="h-6 w-6" />
-                    ) : (
-                      <MicOff className="h-6 w-6" />
-                    )}
-                  </Button>
-                </div>
+                  {mic ? (
+                    <Mic className="h-6 w-6" />
+                  ) : (
+                    <MicOff className="h-6 w-6" />
+                  )}
+                </Button>
               )}
             </div>
 
@@ -581,4 +728,56 @@ export default function InterviewPage() {
       </main>
     </>
   );
+}
+
+function splitTextIntoChunks(text: string, maxLength = 200): string[] {
+  if (!text) {
+    return []; // Return empty array for null, undefined, or empty input
+  }
+
+  // Ensure maxLength is at least 1
+  if (maxLength < 1) {
+    throw new Error("maxLength must be at least 1.");
+  }
+
+  const maxChunkLength = maxLength - 1; // Actual max characters per chunk (e.g., 199)
+  const chunks: string[] = [];
+  let startIndex = 0;
+
+  while (startIndex < text.length) {
+    // If the remaining text is within the allowed length, it's the last chunk
+    if (text.length - startIndex <= maxChunkLength) {
+      chunks.push(text.substring(startIndex));
+      break; // Exit the loop
+    }
+
+    // Determine the potential end index for the slice (exclusive)
+    // We look for a split point *up to* maxChunkLength characters away
+    const potentialEndIndex = startIndex + maxChunkLength;
+
+    // Find the last space character at or before the potential end index
+    const lastSpaceIndex = text.lastIndexOf(" ", potentialEndIndex);
+
+    let chunkEndIndex: number;
+
+    // Check if a suitable space was found within the current segment's range
+    if (lastSpaceIndex > startIndex) {
+      // Found a space, split there. The chunk ends *at* the space.
+      chunkEndIndex = lastSpaceIndex;
+      // The next chunk should start *after* the space
+      const chunk = text.substring(startIndex, chunkEndIndex);
+      chunks.push(chunk);
+      startIndex = chunkEndIndex + 1; // Move past the space
+    } else {
+      // No suitable space found within the limit [startIndex, potentialEndIndex].
+      // Perform a hard cut at maxChunkLength.
+      chunkEndIndex = startIndex + maxChunkLength; // End index for substring
+      const chunk = text.substring(startIndex, chunkEndIndex);
+      chunks.push(chunk);
+      startIndex = chunkEndIndex; // Start the next chunk immediately after the cut
+    }
+  }
+
+  console.log(chunks);
+  return chunks;
 }
