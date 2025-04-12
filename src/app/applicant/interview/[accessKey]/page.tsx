@@ -351,6 +351,18 @@ export default function InterviewPage() {
       submitMessagesToBackend();
     }
   }, [interview_status, messages, messagesSubmitted]);
+  
+  // Effect to redirect to results page when survey is submitted
+  useEffect(() => {
+    if (surveySubmitted && interview_status === "finished") {
+      // Use a small delay to allow the UI to update before redirecting
+      const redirectTimer = setTimeout(() => {
+        router.push(`/applicant/interview/${getKey()}/results`);
+      }, 1500); // 1.5 second delay
+      
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [surveySubmitted, interview_status, router]);
 
   function modifyMessage(message: Message[]) {
     const messages = message.slice(1);
@@ -512,6 +524,9 @@ export default function InterviewPage() {
       if (result.success) {
         setSurveySubmitted(true);
         setShowSurvey(false);
+        
+        // Redirect to results page after successful survey submission
+        router.push(`/applicant/interview/${getKey()}/results`);
       } else {
         console.error("Error submitting survey:", result.error);
         // Show error message to user
@@ -526,7 +541,8 @@ export default function InterviewPage() {
   };
 
   const handleFinish = () => {
-    router.push(`/applicant/view/${getKey()}`);
+    // Redirect to results page instead of job view
+    router.push(`/applicant/interview/${getKey()}/results`);
   };
 
   async function handleStartInterview() {
@@ -751,15 +767,18 @@ export default function InterviewPage() {
                 <CheckCircle className="h-12 w-12 text-green-600" />
               </div>
               <h2 className="mb-2 text-xl font-bold">Survey Submitted</h2>
-              <p className="mb-6 text-gray-600">
+              <p className="mb-2 text-gray-600">
                 Thank you for completing the System Usability Scale survey. Your
                 feedback is valuable to us.
+              </p>
+              <p className="mb-6 text-sm text-primary-500">
+                Redirecting to your results page...
               </p>
               <Button
                 className="w-full bg-[#b78467] hover:bg-[#a07358]"
                 onClick={() => handleFinish()}
               >
-                Finish
+                View Your Results <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           )}
