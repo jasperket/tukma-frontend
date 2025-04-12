@@ -105,7 +105,7 @@ export default function InterviewResultsPage() {
 
   // Convert score to percentage
   const toPercentage = (score: number) => {
-    return Math.round(score * 20); // Assuming score is out of 5
+    return Math.round(score * 10); // Scores are out of 10
   };
 
   // Get color class based on score (red for low, yellow for medium, green for high)
@@ -238,7 +238,7 @@ export default function InterviewResultsPage() {
                     <div className="mb-6 rounded-lg bg-[#f8f7f4] p-5">
                       <h3 className="mb-3 flex items-center text-lg font-medium text-[#3c3022]">
                         <Activity className="mr-2 h-5 w-5 text-[#8b6e4e]" />
-                        Overall Score: {commResults.overallScore.toFixed(1)}/5
+                        Overall Score: {commResults.overallScore.toFixed(2)}/10.00
                       </h3>
                       <div className="h-4 w-full overflow-hidden rounded-full bg-[#e6e0cf]">
                         <div
@@ -308,7 +308,7 @@ export default function InterviewResultsPage() {
                     <div className="mb-6 rounded-lg bg-[#f8f7f4] p-5">
                       <h3 className="mb-3 flex items-center text-lg font-medium text-[#3c3022]">
                         <Activity className="mr-2 h-5 w-5 text-[#8b6e4e]" />
-                        Overall Score: {techResults.overallScore.toFixed(1)}/10
+                        Overall Score: {techResults.overallScore.toFixed(2)}/10.00
                       </h3>
                       <div className="h-4 w-full overflow-hidden rounded-full bg-[#e6e0cf]">
                         <div
@@ -331,9 +331,9 @@ export default function InterviewResultsPage() {
                                   Question {index + 1}
                                 </h3>
                                 <div
-                                  className={`rounded-full px-3 py-1 text-sm font-medium ${getScoreColorClass(result.score / 2)}`}
+                                  className={`rounded-full px-3 py-1 text-sm font-medium ${getScoreColorClass(result.score)}`}
                                 >
-                                  Score: {result.score}/10
+                                  Score: {result.score.toFixed(2)}/10.00
                                 </div>
                               </div>
                               <div className="mb-4 rounded-lg bg-[#f5f2ea] p-4">
