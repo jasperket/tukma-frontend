@@ -26,6 +26,11 @@ const BASE_URL = "https://backend.tukma.work";
 
 export async function signup(data: SignUpFormValues) {
   try {
+    // Validate that passwords match
+    if (data.password !== data.confirmPassword) {
+      return { success: false, error: "Passwords do not match" };
+    }
+    
     console.log("Signing up...");
     // Prepare request body - add companyName for recruiters
     const requestBody: Record<string, unknown> = {

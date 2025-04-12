@@ -43,6 +43,7 @@ const signUpSchema = z
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
         "Password must contain at least one uppercase letter, one lowercase letter, and one number",
       ),
+    confirmPassword: z.string().min(1, "Please confirm your password"),
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
     applicant: z.boolean().default(true),
@@ -55,7 +56,11 @@ const signUpSchema = z
       message: "Company name is required for recruiters",
       path: ["companyName"],
     },
-  );
+  )
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
 export type SignUpFormValues = z.infer<typeof signUpSchema>;
@@ -87,6 +92,7 @@ export default function AuthDialog({
     defaultValues: {
       email: "",
       password: "",
+      confirmPassword: "",
       firstName: "",
       lastName: "",
       applicant: true,
@@ -317,6 +323,26 @@ export default function AuthDialog({
                         - one uppercase letter <br />
                         - one lowercase letter <br />- one number
                       </FormDescription>
+                      <FormMessage className="text-primary-300" />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={signUpForm.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-text-200">
+                        Confirm Password
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          {...field}
+                          disabled={isLoading}
+                          className="border-background-800 bg-background-950 text-text-100 placeholder:text-text-400"
+                        />
+                      </FormControl>
                       <FormMessage className="text-primary-300" />
                     </FormItem>
                   )}
