@@ -8,6 +8,7 @@ import {
   GetSimilarityScore,
   getSimilarityScore,
 } from "~/app/actions/resume";
+import { checkSurveyCompletion } from "~/app/actions/survey";
 import SkillsRadarChart from "../../components/SkillsRadarChart";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
@@ -50,8 +51,19 @@ export default function JobDetailsPage() {
     router.back();
   }
 
-  function handleForward() {
-    router.push(`/applicant/interview/${resume?.resume.job.accessKey}`);
+  async function handleForward() {
+    // Check if the user has completed the system usability survey
+    const surveyStatus = await checkSurveyCompletion();
+
+    if (surveyStatus.success && surveyStatus.data?.isComplete) {
+      // User has completed the survey, direct to results
+      router.push(
+        `/applicant/interview/${resume?.resume.job.accessKey}/results`,
+      );
+    } else {
+      // User has not completed the survey, direct to interview
+      router.push(`/applicant/interview/${resume?.resume.job.accessKey}`);
+    }
   }
 
   return (
