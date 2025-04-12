@@ -45,6 +45,11 @@ export async function signup(data: SignUpFormValues) {
     if (!data.applicant && data.companyName) {
       requestBody.companyName = data.companyName;
     }
+    
+    // Add hasJob for applicants
+    if (data.applicant) {
+      requestBody.hasJob = data.hasJob;
+    }
 
     const response = await fetch(`${BASE_URL}/api/v1/auth/signup`, {
       method: "POST",

@@ -48,6 +48,7 @@ const signUpSchema = z
     lastName: z.string().min(1, "Last name is required"),
     applicant: z.boolean().default(true),
     companyName: z.string().optional(),
+    hasJob: z.boolean().nullable().default(null),
   })
   .refine(
     (data) =>
@@ -97,6 +98,7 @@ export default function AuthDialog({
       lastName: "",
       applicant: true,
       companyName: "",
+      hasJob: false,
     },
   });
 
@@ -390,6 +392,35 @@ export default function AuthDialog({
                           Required for recruiter accounts
                         </FormDescription>
                         <FormMessage className="text-primary-300" />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {/* Has Job field - shown only for applicants */}
+                {signUpForm.watch("applicant") && (
+                  <FormField
+                    control={signUpForm.control}
+                    name="hasJob"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between space-y-0 rounded-lg border border-background-800 p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-text-200">
+                            I currently have a job
+                          </FormLabel>
+                          <FormDescription className="text-text-400">
+                            Let recruiters know your employment status
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value === true}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked ? true : false);
+                            }}
+                            className="h-5 w-5 border-2 border-primary-300 data-[state=checked]:bg-primary-300 data-[state=checked]:text-background-950"
+                          />
+                        </FormControl>
                       </FormItem>
                     )}
                   />
