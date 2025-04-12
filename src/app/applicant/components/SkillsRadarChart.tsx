@@ -126,10 +126,6 @@ const SkillsRadarChart: React.FC<SkillsRadarChartProps> = ({
             >
               <div>
                 <span className="font-medium capitalize">{skill_name}</span>
-                <div className="mt-1 text-sm text-gray-600">
-                  <span className="font-medium">Best match: </span>&quot;
-                  {ngram}&quot; 
-                </div>
               </div>
               <Badge className="bg-[#e9e5d9] text-[#4a3f35] hover:bg-[#e0dbd0]">
                 {scorePercentage}% match
