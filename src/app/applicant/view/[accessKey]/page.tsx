@@ -56,6 +56,7 @@ export default function JobDetailsPage() {
   const jobData = useJobStore((state) => state.jobData);
   const setJobInfoData = useJobStore((state) => state.setJobInfoData);
   const [loading, setLoading] = useState<boolean>(true);
+  const [uploading, setUploading] = useState<boolean>(false);
   const [uploaded, setIsUploaded] = useState<boolean>(false);
   const [file, setFile] = useState<File | null>();
   const [application, setApplication] = useState<GetMyApplicationForJob | null>(null);
@@ -81,22 +82,27 @@ export default function JobDetailsPage() {
   }, []);
 
   async function uploadFile() {
+    setUploading(true);
     if (application !== null) {
+      setUploading(false);
       router.push(`/applicant/resume/${application.resume.resumeHash}`);
       return;
     }
 
     if (!file) {
+      setUploading(false);
       console.error("No file selected.");
       return; // Exit early if no file is selected
     }
 
     if (!jobData?.keywords || !Array.isArray(jobData.keywords)) {
+      setUploading(false);
       console.error("Invalid or missing keywords.");
       return; // Exit early if keywords are invalid or missing
     }
 
     if (!jobData?.job?.accessKey) {
+      setUploading(false);
       console.error("Invalid or missing access key.");
       return; // Exit early if access key is invalid or missing
     }
@@ -246,11 +252,18 @@ export default function JobDetailsPage() {
               </Link>
               <Button
                 variant="outline"
-                disabled={loading ? true : !uploaded && application === null}
+                disabled={loading ? true : (!uploaded && application === null) || uploading}
                 className="flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
                 onClick={() => uploadFile()}
               >
-                {application !== null ? "View Result" : "Apply"}
+                {uploading ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    {application !== null ? "Loading..." : "Uploading..."}
+                  </>
+                ) : (
+                  application !== null ? "View Result" : "Apply"
+                )}
               </Button>
             </div>
           </div>
