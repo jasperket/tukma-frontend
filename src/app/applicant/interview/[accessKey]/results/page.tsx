@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, MessageSquare, Code, Activity, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  MessageSquare,
+  Code,
+  Activity,
+  AlertCircle,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Button } from "~/components/ui/button";
 import {
@@ -24,8 +30,10 @@ export default function InterviewResultsPage() {
   const [accessKey, setAccessKey] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("communication");
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [commResults, setCommResults] = useState<CommunicationResultsResponse | null>(null);
-  const [techResults, setTechResults] = useState<TechnicalResultsResponse | null>(null);
+  const [commResults, setCommResults] =
+    useState<CommunicationResultsResponse | null>(null);
+  const [techResults, setTechResults] =
+    useState<TechnicalResultsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,13 +55,19 @@ export default function InterviewResultsPage() {
         if (commResponse.success) {
           setCommResults(commResponse.data);
         } else {
-          console.error("Failed to fetch communication results:", commResponse.error);
+          console.error(
+            "Failed to fetch communication results:",
+            commResponse.error,
+          );
         }
 
         if (techResponse.success) {
           setTechResults(techResponse.data);
         } else {
-          console.error("Failed to fetch technical results:", techResponse.error);
+          console.error(
+            "Failed to fetch technical results:",
+            techResponse.error,
+          );
         }
 
         // Show error if both failed
@@ -101,7 +115,9 @@ export default function InterviewResultsPage() {
       <div className="container mx-auto px-4 py-12">
         <div className="flex items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#8b6e4e] border-t-transparent"></div>
-          <span className="ml-3 text-lg text-[#3c3022]">Loading your results...</span>
+          <span className="ml-3 text-lg text-[#3c3022]">
+            Loading your results...
+          </span>
         </div>
       </div>
     );
@@ -114,7 +130,9 @@ export default function InterviewResultsPage() {
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-red-500" />
           <h2 className="mb-2 text-xl font-semibold text-red-700">{error}</h2>
           <p className="mb-4 text-red-600">
-            We couldn't load your interview results. This might be because the interview is not yet complete or there was an error processing your results.
+            We couldn&apos;t load your interview results. This might be because
+            the interview is not yet complete or there was an error processing
+            your results.
           </p>
           <Link href={`/applicant/view/${accessKey}`}>
             <Button variant="outline" className="mx-auto">
@@ -145,23 +163,32 @@ export default function InterviewResultsPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-[#3c3022]">Interview Results</h1>
         <p className="mt-2 text-[#6b5d4c]">
-          Review your interview performance and feedback from our AI evaluation system.
+          Review your interview performance and feedback from our AI evaluation
+          system.
         </p>
       </div>
 
       {noResultsAvailable ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-amber-500" />
-          <h2 className="mb-2 text-xl font-semibold text-amber-700">No Results Available Yet</h2>
+          <h2 className="mb-2 text-xl font-semibold text-amber-700">
+            No Results Available Yet
+          </h2>
           <p className="mb-4 text-amber-600">
-            Your interview results are not available yet. This might be because the interview is not yet complete or your responses are still being evaluated.
+            Your interview results are not available yet. This might be because
+            the interview is not yet complete or your responses are still being
+            evaluated.
           </p>
           <p className="text-amber-600">
-            Please check back later or contact support if you believe this is an error.
+            Please check back later or contact support if you believe this is an
+            error.
           </p>
         </div>
       ) : (
-        <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value)}>
+        <Tabs
+          defaultValue={activeTab}
+          onValueChange={(value) => setActiveTab(value)}
+        >
           <TabsList className="mb-6 grid w-full grid-cols-2 bg-[#f5f2ea]">
             <TabsTrigger
               value="communication"
@@ -191,7 +218,9 @@ export default function InterviewResultsPage() {
                       <CardTitle className="text-2xl font-bold text-[#3c3022]">
                         Communication Assessment
                       </CardTitle>
-                      <div className={`rounded-full px-4 py-1 font-bold ${getScoreColorClass(commResults.overallScore)}`}>
+                      <div
+                        className={`rounded-full px-4 py-1 font-bold ${getScoreColorClass(commResults.overallScore)}`}
+                      >
                         {toPercentage(commResults.overallScore)}%
                       </div>
                     </div>
@@ -208,20 +237,30 @@ export default function InterviewResultsPage() {
                       <div className="h-4 w-full overflow-hidden rounded-full bg-[#e6e0cf]">
                         <div
                           className="h-full bg-[#8b6e4e]"
-                          style={{ width: `${toPercentage(commResults.overallScore)}%` }}
+                          style={{
+                            width: `${toPercentage(commResults.overallScore)}%`,
+                          }}
                         ></div>
                       </div>
                     </div>
 
                     <div className="space-y-6">
                       <div className="rounded-lg border border-[#e6e0cf] p-5">
-                        <h3 className="mb-3 text-lg font-medium text-[#3c3022]">Strengths</h3>
-                        <p className="whitespace-pre-line text-[#6b5d4c]">{commResults.strengths}</p>
+                        <h3 className="mb-3 text-lg font-medium text-[#3c3022]">
+                          Strengths
+                        </h3>
+                        <p className="whitespace-pre-line text-[#6b5d4c]">
+                          {commResults.strengths}
+                        </p>
                       </div>
 
                       <div className="rounded-lg border border-[#e6e0cf] p-5">
-                        <h3 className="mb-3 text-lg font-medium text-[#3c3022]">Areas for Improvement</h3>
-                        <p className="whitespace-pre-line text-[#6b5d4c]">{commResults.areasForImprovement}</p>
+                        <h3 className="mb-3 text-lg font-medium text-[#3c3022]">
+                          Areas for Improvement
+                        </h3>
+                        <p className="whitespace-pre-line text-[#6b5d4c]">
+                          {commResults.areasForImprovement}
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -240,12 +279,15 @@ export default function InterviewResultsPage() {
                       <CardTitle className="text-2xl font-bold text-[#3c3022]">
                         Technical Assessment
                       </CardTitle>
-                      <div className={`rounded-full px-4 py-1 font-bold ${getScoreColorClass(techResults.overallScore)}`}>
+                      <div
+                        className={`rounded-full px-4 py-1 font-bold ${getScoreColorClass(techResults.overallScore)}`}
+                      >
                         {toPercentage(techResults.overallScore)}%
                       </div>
                     </div>
                     <CardDescription>
-                      {techResults.technicalResults.length} technical questions evaluated
+                      {techResults.technicalResults.length} technical questions
+                      evaluated
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -257,52 +299,69 @@ export default function InterviewResultsPage() {
                       <div className="h-4 w-full overflow-hidden rounded-full bg-[#e6e0cf]">
                         <div
                           className="h-full bg-[#8b6e4e]"
-                          style={{ width: `${(techResults.overallScore * 10)}%` }}
+                          style={{ width: `${techResults.overallScore * 10}%` }}
                         ></div>
                       </div>
                     </div>
 
                     {techResults.technicalResults.length > 0 ? (
                       <div className="space-y-6">
-                        {techResults.technicalResults.map((result: TechnicalResult, index: number) => (
-                          <div key={result.id} className="rounded-lg border border-[#e6e0cf] p-5">
-                            <div className="mb-4 flex items-center justify-between">
-                              <h3 className="text-lg font-medium text-[#3c3022]">
-                                Question {index + 1}
-                              </h3>
-                              <div className={`rounded-full px-3 py-1 text-sm font-medium ${getScoreColorClass(result.score/2)}`}>
-                                Score: {result.score}/10
+                        {techResults.technicalResults.map(
+                          (result: TechnicalResult, index: number) => (
+                            <div
+                              key={result.id}
+                              className="rounded-lg border border-[#e6e0cf] p-5"
+                            >
+                              <div className="mb-4 flex items-center justify-between">
+                                <h3 className="text-lg font-medium text-[#3c3022]">
+                                  Question {index + 1}
+                                </h3>
+                                <div
+                                  className={`rounded-full px-3 py-1 text-sm font-medium ${getScoreColorClass(result.score / 2)}`}
+                                >
+                                  Score: {result.score}/10
+                                </div>
                               </div>
-                            </div>
-                            <div className="mb-4 rounded-lg bg-[#f5f2ea] p-4">
-                              <p className="font-medium text-[#3c3022]">{result.questionText}</p>
-                            </div>
-                            <div className="mb-4">
-                              <h4 className="mb-2 font-medium text-[#3c3022]">Your Answer:</h4>
-                              <p className="rounded-lg bg-white p-3 text-[#6b5d4c]">
-                                {result.answerText}
-                              </p>
-                            </div>
-                            <div className="mb-4">
-                              <h4 className="mb-2 font-medium text-[#3c3022]">Feedback:</h4>
-                              <p className="rounded-lg bg-[#e6e0cf] p-3 text-[#6b5d4c]">
-                                {result.feedback}
-                              </p>
-                            </div>
-                            {result.errors && (
-                              <div>
-                                <h4 className="mb-2 font-medium text-[#3c3022]">Areas to Improve:</h4>
-                                <p className="rounded-lg bg-[#f8e7e7] p-3 text-[#9b4d4d]">
-                                  {result.errors}
+                              <div className="mb-4 rounded-lg bg-[#f5f2ea] p-4">
+                                <p className="font-medium text-[#3c3022]">
+                                  {result.questionText}
                                 </p>
                               </div>
-                            )}
-                          </div>
-                        ))}
+                              <div className="mb-4">
+                                <h4 className="mb-2 font-medium text-[#3c3022]">
+                                  Your Answer:
+                                </h4>
+                                <p className="rounded-lg bg-white p-3 text-[#6b5d4c]">
+                                  {result.answerText}
+                                </p>
+                              </div>
+                              <div className="mb-4">
+                                <h4 className="mb-2 font-medium text-[#3c3022]">
+                                  Feedback:
+                                </h4>
+                                <p className="rounded-lg bg-[#e6e0cf] p-3 text-[#6b5d4c]">
+                                  {result.feedback}
+                                </p>
+                              </div>
+                              {result.errors && (
+                                <div>
+                                  <h4 className="mb-2 font-medium text-[#3c3022]">
+                                    Areas to Improve:
+                                  </h4>
+                                  <p className="rounded-lg bg-[#f8e7e7] p-3 text-[#9b4d4d]">
+                                    {result.errors}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ),
+                        )}
                       </div>
                     ) : (
                       <div className="rounded-lg border border-[#e6e0cf] p-5 text-center">
-                        <p className="text-[#6b5d4c]">No technical questions were evaluated.</p>
+                        <p className="text-[#6b5d4c]">
+                          No technical questions were evaluated.
+                        </p>
                       </div>
                     )}
                   </CardContent>
