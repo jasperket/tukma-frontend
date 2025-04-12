@@ -38,6 +38,13 @@ export interface SusScoreResponse {
   possibleMax: number;
 }
 
+export interface SurveyCompletionStatus {
+  isComplete: boolean;
+  answeredQuestions: number;
+  requiredQuestions: number;
+  remainingQuestions: number;
+}
+
 // Fetch all survey questions
 export async function getAllQuestions() {
   try {
@@ -137,6 +144,37 @@ export async function getSusScore() {
   } catch (error) {
     if (error instanceof Error) {
       console.error("Failed to fetch SUS score:", error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+// Check if the current user has completed the SUS survey
+export async function checkSurveyCompletion() {
+  try {
+    console.log("Checking survey completion status");
+
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+    const response = await fetch(`${BASE_URL}/answers/check-survey-completion`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `jwt=${cookie?.value}`,
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = (await response.json()) as SurveyCompletionStatus;
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("Failed to check survey completion:", error.message);
       return { success: false, error: error.message };
     }
     return { success: false, error: "An unexpected error occurred" };
