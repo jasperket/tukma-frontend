@@ -30,20 +30,27 @@ export default function InterviewResultsPage() {
   const [accessKey, setAccessKey] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("communication");
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [commResults, setCommResults] =
-    useState<CommunicationResultsResponse | null>(null);
-  const [techResults, setTechResults] =
-    useState<TechnicalResultsResponse | null>(null);
+  const [commResults, setCommResults] = useState<
+    CommunicationResultsResponse | undefined
+  >(undefined);
+  const [techResults, setTechResults] = useState<
+    TechnicalResultsResponse | undefined
+  >(undefined);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Extract the access key from the URL
     const key = window.location.pathname.split("/")[3];
-    setAccessKey(key);
 
     async function fetchResults() {
       setIsLoading(true);
       setError(null);
+
+      if (!key) {
+        setError("No access key found. Please try again or contact support.");
+        setIsLoading(false);
+        return;
+      }
 
       try {
         // Fetch both results in parallel
@@ -60,7 +67,6 @@ export default function InterviewResultsPage() {
             commResponse.error,
           );
         }
-
         if (techResponse.success) {
           setTechResults(techResponse.data);
         } else {
