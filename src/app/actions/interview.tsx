@@ -24,6 +24,13 @@ export interface Message {
   role: string; // more specific if you have fixed roles
 }
 
+export interface MessageToSubmit {
+  id: number;
+  content: string;
+  timestamp: string;
+  role: string;
+}
+
 export interface GetMessagesResponse {
   access_key: string;
   message_count: number;
@@ -337,6 +344,52 @@ export async function interviewStatus(accessKey: string, name: string, email: st
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+/**
+ * Submit interview messages to the backend API
+ * This action is called when the interview is completed
+ */
+export async function submitInterviewMessages(accessKey: string, messages: MessageToSubmit[]) {
+  try {
+    console.log("Submitting interview messages");
+    
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+    
+    const response = await fetch(
+      `https://backend.tukma.work/api/v1/interview/messages/${accessKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `jwt=${cookie?.value}`,
+        },
+        credentials: "include", // Include cookies in the request
+        body: JSON.stringify({
+          messages: messages
+        }),
+      }
+    );
+
+    // Check if the response is successful
+    if (!response.ok) {
+      console.log("Failed to submit interview messages:", response);
+      throw new Error(`Failed to submit interview messages: ${response.status}`);
+    }
+
+    // Parse the JSON response
+    const result = await response.json();
+    console.log("Messages submitted successfully:", result);
+
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log("Error submitting interview messages:", error.message);
       return { success: false, error: error.message };
     }
     return { success: false, error: "An unexpected error occurred" };

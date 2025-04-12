@@ -9,9 +9,11 @@ import {
   getQuestions,
   interviewStatus,
   Message,
+  MessageToSubmit,
   Question,
   reply,
   startInterview,
+  submitInterviewMessages,
 } from "~/app/actions/interview";
 import { getJobDetails, JobWithKeywords } from "~/app/actions/recruiter";
 import { getUserInfo } from "~/app/actions/auth";
@@ -124,6 +126,8 @@ export default function InterviewPage() {
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [interview_status, setInterviewStatus] =
     useState<string>("uninitiated");
+  const [messagesSubmitted, setMessagesSubmitted] = useState<boolean>(false);
+  const [submittingMessages, setSubmittingMessages] = useState<boolean>(false);
 
   const [showSurvey, setShowSurvey] = useState<boolean>(false);
   const [surveySubmitted, setSurveySubmitted] = useState<boolean>(false);
@@ -214,6 +218,11 @@ export default function InterviewPage() {
         if (surveyResponse.success && surveyResponse.data) {
           setSurveyQuestions(surveyResponse.data);
         }
+        
+        // Submit the messages to the backend if not already submitted
+        if (messages && messages.length > 0 && !messagesSubmitted) {
+          await submitMessagesToBackend();
+        }
 
         setLoading(false);
         return;
@@ -296,6 +305,23 @@ export default function InterviewPage() {
         if (response2.success) {
           setTranscript("");
           modifyMessage(response2.data!.messages);
+          
+          // Check if the interview status has changed
+          const statusResponse = await interviewStatus(
+            getKey(),
+            nameRef.current!,
+            emailRef.current!,
+          );
+          
+          if (statusResponse.success) {
+            const newStatus = statusResponse.data!.status;
+            setInterviewStatus(newStatus);
+            
+            // If the interview just finished, submit the messages
+            if (newStatus === "finished" && !messagesSubmitted && !submittingMessages) {
+              await submitMessagesToBackend();
+            }
+          }
         }
         if (response.success) {
           speech(response.data!.system);
@@ -312,15 +338,57 @@ export default function InterviewPage() {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
-  }, [messages, thinking, transcript]);
+  }, [messages, thinking, transcript, messagesSubmitted]);
 
   useEffect(() => {
     transcriptRef.current = transcript;
   }, [transcript]);
+  
+  // Effect to monitor interview status changes and submit messages when finished
+  useEffect(() => {
+    // If the interview just finished and we have messages that aren't submitted yet
+    if (interview_status === "finished" && messages && messages.length > 0 && !messagesSubmitted) {
+      submitMessagesToBackend();
+    }
+  }, [interview_status, messages, messagesSubmitted]);
 
   function modifyMessage(message: Message[]) {
     const messages = message.slice(1);
     setMessages(messages);
+  }
+  
+  // Submit interview messages to the backend
+  async function submitMessagesToBackend() {
+    if (!messages || messages.length === 0 || messagesSubmitted || submittingMessages) {
+      return;
+    }
+    
+    try {
+      setSubmittingMessages(true);
+      console.log("Preparing to submit interview messages");
+      
+      // Convert messages to the format expected by the backend
+      const messagesToSubmit: MessageToSubmit[] = messages.map(msg => ({
+        id: msg.id,
+        content: msg.content,
+        timestamp: msg.timestamp,
+        role: msg.role
+      }));
+      
+      // Submit the messages
+      const result = await submitInterviewMessages(getKey(), messagesToSubmit);
+      
+      if (result.success) {
+        console.log("Successfully submitted interview messages");
+        setMessagesSubmitted(true);
+      } else {
+        console.error("Failed to submit interview messages:", result.error);
+      }
+    } catch (error) {
+      console.error("Error submitting interview messages:", error);
+    } finally {
+      setSubmittingMessages(false);
+    }
   }
 
   function getKey(): string {
@@ -395,17 +463,22 @@ export default function InterviewPage() {
     }, 0);
 
     async function init() {
-      const interview_status = await interviewStatus(
-        getKey(),
-        nameRef.current!,
-        emailRef.current!,
-      );
-      if (!interview_status.success) {
-        setError(true);
-        return;
-      }
-      setInterviewStatus(interview_status.data!.status);
+    const interview_status = await interviewStatus(
+    getKey(),
+    nameRef.current!,
+    emailRef.current!,
+    );
+    if (!interview_status.success) {
+    setError(true);
+    return;
     }
+    setInterviewStatus(interview_status.data!.status);
+      
+    // If the interview is finished, submit messages
+    if (interview_status.data!.status === "finished" && messages && messages.length > 0 && !messagesSubmitted) {
+      await submitMessagesToBackend();
+    }
+  }
 
     init();
   }
@@ -558,16 +631,25 @@ export default function InterviewPage() {
                   <h3 className="mb-2 font-medium text-amber-800">
                     Interview Complete
                   </h3>
-                  <p className="text-sm text-amber-700">
-                    Thank you for participating in our interview. Please
-                    complete a short System Usability Scale (SUS) survey to help
-                    us evaluate the system.
-                  </p>
+                  {submittingMessages ? (
+                    <p className="text-sm text-amber-700 flex items-center">
+                      <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-amber-700 border-t-transparent"></span>
+                      Submitting interview data...
+                    </p>
+                  ) : (
+                    <p className="text-sm text-amber-700">
+                      {messagesSubmitted ? 
+                        "Interview data submitted successfully. " : ""}
+                      Please complete a short System Usability Scale (SUS) survey to help
+                      us evaluate the system.
+                    </p>
+                  )}
                 </div>
 
                 <Button
                   onClick={() => setShowSurvey(true)}
                   className="w-full bg-[#b78467] hover:bg-[#a07358]"
+                  disabled={submittingMessages}
                 >
                   Start System Usability Survey{" "}
                   <ChevronRight className="ml-2 h-4 w-4" />
