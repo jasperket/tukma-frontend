@@ -141,7 +141,7 @@ export default function InterviewResultsPage() {
             your results.
           </p>
           <Link href={`/applicant/view/${accessKey}`}>
-            <Button variant="outline" className="mx-auto">
+            <Button variant="ghost" className="mx-auto">
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Job Details
             </Button>
           </Link>
@@ -157,8 +157,8 @@ export default function InterviewResultsPage() {
       <div className="mb-6">
         <Link href={`/applicant/view/${accessKey}`}>
           <Button
-            variant={"outline"}
-            className="flex items-center gap-2 text-[#3c3022] hover:bg-[#e6e0cf]"
+            variant={"ghost"}
+            className="ml-[-1rem] text-[#3c3022] hover:bg-[#e6e0cf]"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Job Details
@@ -255,18 +255,26 @@ export default function InterviewResultsPage() {
                         <h3 className="mb-3 text-lg font-medium text-[#3c3022]">
                           Strengths
                         </h3>
-                        <p className="whitespace-pre-line text-[#6b5d4c]">
-                          {commResults.strengths}
-                        </p>
+                        <ul className="list-disc pl-5 text-[#6b5d4c]">
+                          {commResults.strengths
+                            .split(".. ")
+                            .map((strength, index) => (
+                              <li key={index}>{strength.replace(/\./g, "")}</li>
+                            ))}
+                        </ul>
                       </div>
 
                       <div className="rounded-lg border border-[#e6e0cf] p-5">
                         <h3 className="mb-3 text-lg font-medium text-[#3c3022]">
                           Areas for Improvement
                         </h3>
-                        <p className="whitespace-pre-line text-[#6b5d4c]">
-                          {commResults.areasForImprovement}
-                        </p>
+                        <ul className="list-disc pl-5 text-[#6b5d4c]">
+                          {commResults.areasForImprovement
+                            .split(".. ")
+                            .map((area, index) => (
+                              <li key={index}>{area.replace(/\./g, "")}</li>
+                            ))}
+                        </ul>
                       </div>
                     </div>
                   </CardContent>
