@@ -41,6 +41,7 @@ export default function InterviewResultsPage() {
   useEffect(() => {
     // Extract the access key from the URL
     const key = window.location.pathname.split("/")[3];
+    if (key) setAccessKey(key);
 
     async function fetchResults() {
       setIsLoading(true);
@@ -238,7 +239,8 @@ export default function InterviewResultsPage() {
                     <div className="mb-6 rounded-lg bg-[#f8f7f4] p-5">
                       <h3 className="mb-3 flex items-center text-lg font-medium text-[#3c3022]">
                         <Activity className="mr-2 h-5 w-5 text-[#8b6e4e]" />
-                        Overall Score: {commResults.overallScore.toFixed(2)}/10.00
+                        Overall Score: {commResults.overallScore.toFixed(2)}
+                        /10.00
                       </h3>
                       <div className="h-4 w-full overflow-hidden rounded-full bg-[#e6e0cf]">
                         <div
@@ -308,7 +310,8 @@ export default function InterviewResultsPage() {
                     <div className="mb-6 rounded-lg bg-[#f8f7f4] p-5">
                       <h3 className="mb-3 flex items-center text-lg font-medium text-[#3c3022]">
                         <Activity className="mr-2 h-5 w-5 text-[#8b6e4e]" />
-                        Overall Score: {techResults.overallScore.toFixed(2)}/10.00
+                        Overall Score: {techResults.overallScore.toFixed(2)}
+                        /10.00
                       </h3>
                       <div className="h-4 w-full overflow-hidden rounded-full bg-[#e6e0cf]">
                         <div
