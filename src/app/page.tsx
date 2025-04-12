@@ -32,10 +32,12 @@ export default function HomePage() {
           </h1>
           <div className="p-2"></div>
           <p className="max-w-prose text-lg">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptates
-            recusandae aperiam expedita odio nemo mollitia quod ducimus eaque
-            quisquam quos reprehenderit dignissimos veritatis necessitatibus,
-            laudantium illum dolorum quidem consequatur deserunt?
+            Tukma revolutionizes talent acquisition with AI-powered interviewing
+            and resume analysis. From job posting to final selection, our
+            platform matches the right candidates with the right
+            opportunities—saving time, reducing bias, and improving hiring
+            outcomes. The future of recruitment is here, and it&apos;s smarter
+            than ever.
           </p>
         </main>
       </div>
