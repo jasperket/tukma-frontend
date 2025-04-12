@@ -31,6 +31,34 @@ export interface MessageToSubmit {
   role: string;
 }
 
+export interface ProcessedMessageResult {
+  messageId: number;
+  classification?: string;
+  sentiment?: number;
+  keyTechnicalConcepts?: string[];
+  skillLevel?: number;
+  questionQuality?: number;
+  answerRelevance?: number;
+  technicalAccuracy?: number;
+  communicationClarity?: number;
+  evaluationNotes?: string;
+}
+
+export interface MessageSubmitResponse {
+  processedMessages: ProcessedMessageResult[];
+  overallEvaluation?: {
+    technicalScore?: number;
+    communicationScore?: number;
+    strengths?: string[];
+    areasForImprovement?: string[];
+  };
+  jobInfo?: {
+    id: number;
+    title: string;
+    accessKey: string;
+  };
+}
+
 export interface GetMessagesResponse {
   access_key: string;
   message_count: number;
@@ -383,7 +411,7 @@ export async function submitInterviewMessages(accessKey: string, messages: Messa
     }
 
     // Parse the JSON response
-    const result = await response.json();
+    const result = await response.json() as MessageSubmitResponse;
     console.log("Messages submitted successfully:", result);
 
     return { success: true, data: result };
