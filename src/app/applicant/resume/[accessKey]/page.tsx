@@ -12,7 +12,7 @@ import { checkSurveyCompletion } from "~/app/actions/survey";
 import SkillsRadarChart from "../../components/SkillsRadarChart";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function JobDetailsPage() {
@@ -21,6 +21,7 @@ export default function JobDetailsPage() {
   const [status, setStatus] = useState<string>("");
   const [resume, setResume] = useState<GetResumeData | null>(null);
   const [similarity, setSimilarity] = useState<GetSimilarityScore | null>(null);
+  const [isNavigating, setIsNavigating] = useState<boolean>(false);
 
   useEffect(() => {
     const hash = window.location.href.split("/").pop();
@@ -52,17 +53,29 @@ export default function JobDetailsPage() {
   }
 
   async function handleForward() {
-    // Check if the user has completed the system usability survey
-    const surveyStatus = await checkSurveyCompletion();
+    // Set loading state
+    setIsNavigating(true);
+    
+    try {
+      // Check if the user has completed the system usability survey
+      const surveyStatus = await checkSurveyCompletion();
 
-    if (surveyStatus.success && surveyStatus.data?.isComplete) {
-      // User has completed the survey, direct to results
-      router.push(
-        `/applicant/interview/${resume?.resume.job.accessKey}/results`,
-      );
-    } else {
-      // User has not completed the survey, direct to interview
+      if (surveyStatus.success && surveyStatus.data?.isComplete) {
+        // User has completed the survey, direct to results
+        router.push(
+          `/applicant/interview/${resume?.resume.job.accessKey}/results`,
+        );
+      } else {
+        // User has not completed the survey, direct to interview
+        router.push(`/applicant/interview/${resume?.resume.job.accessKey}`);
+      }
+    } catch (error) {
+      console.error("Error checking survey completion:", error);
+      // If there's an error, default to the interview path
       router.push(`/applicant/interview/${resume?.resume.job.accessKey}`);
+    } finally {
+      // Reset loading state - though this might not execute due to navigation
+      setIsNavigating(false);
     }
   }
 
@@ -90,8 +103,13 @@ export default function JobDetailsPage() {
                   variant="outline"
                   className="flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
                   onClick={() => handleForward()}
+                  disabled={isNavigating}
                 >
-                  Interview
+                  {isNavigating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...
+                    </>
+                  ) : "Interview"}
                 </Button>
               </div>
             </>
