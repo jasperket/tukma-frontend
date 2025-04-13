@@ -218,7 +218,7 @@ export default function InterviewPage() {
         if (surveyResponse.success && surveyResponse.data) {
           setSurveyQuestions(surveyResponse.data);
         }
-        
+
         // Submit the messages to the backend if not already submitted
         if (messages && messages.length > 0 && !messagesSubmitted) {
           await submitMessagesToBackend();
@@ -305,20 +305,24 @@ export default function InterviewPage() {
         if (response2.success) {
           setTranscript("");
           modifyMessage(response2.data!.messages);
-          
+
           // Check if the interview status has changed
           const statusResponse = await interviewStatus(
             getKey(),
             nameRef.current!,
             emailRef.current!,
           );
-          
+
           if (statusResponse.success) {
             const newStatus = statusResponse.data!.status;
             setInterviewStatus(newStatus);
-            
+
             // If the interview just finished, submit the messages
-            if (newStatus === "finished" && !messagesSubmitted && !submittingMessages) {
+            if (
+              newStatus === "finished" &&
+              !messagesSubmitted &&
+              !submittingMessages
+            ) {
               await submitMessagesToBackend();
             }
           }
@@ -343,15 +347,20 @@ export default function InterviewPage() {
   useEffect(() => {
     transcriptRef.current = transcript;
   }, [transcript]);
-  
+
   // Effect to monitor interview status changes and submit messages when finished
   useEffect(() => {
     // If the interview just finished and we have messages that aren't submitted yet
-    if (interview_status === "finished" && messages && messages.length > 0 && !messagesSubmitted) {
+    if (
+      interview_status === "finished" &&
+      messages &&
+      messages.length > 0 &&
+      !messagesSubmitted
+    ) {
       submitMessagesToBackend();
     }
   }, [interview_status, messages, messagesSubmitted]);
-  
+
   // Effect to redirect to results page when survey is submitted
   useEffect(() => {
     if (surveySubmitted && interview_status === "finished") {
@@ -359,7 +368,7 @@ export default function InterviewPage() {
       const redirectTimer = setTimeout(() => {
         router.push(`/applicant/interview/${getKey()}/results`);
       }, 1500); // 1.5 second delay
-      
+
       return () => clearTimeout(redirectTimer);
     }
   }, [surveySubmitted, interview_status, router]);
@@ -368,28 +377,33 @@ export default function InterviewPage() {
     const messages = message.slice(1);
     setMessages(messages);
   }
-  
+
   // Submit interview messages to the backend
   async function submitMessagesToBackend() {
-    if (!messages || messages.length === 0 || messagesSubmitted || submittingMessages) {
+    if (
+      !messages ||
+      messages.length === 0 ||
+      messagesSubmitted ||
+      submittingMessages
+    ) {
       return;
     }
-    
+
     try {
       setSubmittingMessages(true);
       console.log("Preparing to submit interview messages");
-      
+
       // Convert messages to the format expected by the backend
-      const messagesToSubmit: MessageToSubmit[] = messages.map(msg => ({
+      const messagesToSubmit: MessageToSubmit[] = messages.map((msg) => ({
         id: msg.id,
         content: msg.content,
         timestamp: msg.timestamp,
-        role: msg.role
+        role: msg.role,
       }));
-      
+
       // Submit the messages
       const result = await submitInterviewMessages(getKey(), messagesToSubmit);
-      
+
       if (result.success) {
         console.log("Successfully submitted interview messages");
         setMessagesSubmitted(true);
@@ -475,22 +489,27 @@ export default function InterviewPage() {
     }, 0);
 
     async function init() {
-    const interview_status = await interviewStatus(
-    getKey(),
-    nameRef.current!,
-    emailRef.current!,
-    );
-    if (!interview_status.success) {
-    setError(true);
-    return;
+      const interview_status = await interviewStatus(
+        getKey(),
+        nameRef.current!,
+        emailRef.current!,
+      );
+      if (!interview_status.success) {
+        setError(true);
+        return;
+      }
+      setInterviewStatus(interview_status.data!.status);
+
+      // If the interview is finished, submit messages
+      if (
+        interview_status.data!.status === "finished" &&
+        messages &&
+        messages.length > 0 &&
+        !messagesSubmitted
+      ) {
+        await submitMessagesToBackend();
+      }
     }
-    setInterviewStatus(interview_status.data!.status);
-      
-    // If the interview is finished, submit messages
-    if (interview_status.data!.status === "finished" && messages && messages.length > 0 && !messagesSubmitted) {
-      await submitMessagesToBackend();
-    }
-  }
 
     init();
   }
@@ -524,7 +543,7 @@ export default function InterviewPage() {
       if (result.success) {
         setSurveySubmitted(true);
         setShowSurvey(false);
-        
+
         // Redirect to results page after successful survey submission
         router.push(`/applicant/interview/${getKey()}/results`);
       } else {
@@ -648,16 +667,17 @@ export default function InterviewPage() {
                     Interview Complete
                   </h3>
                   {submittingMessages ? (
-                    <p className="text-sm text-amber-700 flex items-center">
+                    <p className="flex items-center text-sm text-amber-700">
                       <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-amber-700 border-t-transparent"></span>
                       Submitting interview data...
                     </p>
                   ) : (
                     <p className="text-sm text-amber-700">
-                      {messagesSubmitted ? 
-                        "Interview data submitted successfully. " : ""}
-                      Please complete a short System Usability Scale (SUS) survey to help
-                      us evaluate the system.
+                      {messagesSubmitted
+                        ? "Interview data submitted successfully. "
+                        : ""}
+                      Please complete a short System Usability Scale (SUS)
+                      survey to help us evaluate the system.
                     </p>
                   )}
                 </div>

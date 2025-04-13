@@ -300,6 +300,7 @@ export async function getJobQuestions(accessKey: string) {
     }
 
     const questions = (await response.json()) as Question[];
+    console.log(questions);
 
     // Separate questions by type
     const behavioral = questions
@@ -309,7 +310,7 @@ export async function getJobQuestions(accessKey: string) {
       .filter((q) => q.type === "TECHNICAL")
       .map((q) => q.questionText);
 
-    return { behavioral, technical };
+    return { success: true, data: questions, behavioral, technical };
   } catch (error) {
     console.error("Error getting questions:", error);
     return { behavioral: [], technical: [] };
