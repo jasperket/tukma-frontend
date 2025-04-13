@@ -27,6 +27,7 @@ import {
 import { Input } from "~/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { checkUser, login, signup } from "../actions/auth";
+import { LoaderCircle } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -227,9 +228,9 @@ export default function AuthDialog({
                   className="relative w-full bg-primary-300 hover:bg-primary-400"
                 >
                   {isLoading ? (
-                    <div className="absolute flex items-center justify-center">
-                      <span className="loader"></span>
-                    </div>
+                    <div className="animate-spin">
+                      <LoaderCircle />
+                    </div> 
                   ) : (
                     "Log in"
                   )}
