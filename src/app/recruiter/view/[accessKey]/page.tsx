@@ -111,8 +111,6 @@ export default function JobDetailsPage() {
     );
   }
 
-  const { job, keywords } = jobData;
-
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="rounded-lg bg-white p-6 shadow-sm">
@@ -120,21 +118,21 @@ export default function JobDetailsPage() {
           {/* Job header */}
           <div className="border-b border-[#e6e0cf] pb-4">
             <h1 className="mb-3 text-3xl font-bold text-[#3c3022]">
-              {job.title}
+              {jobData.job.title}
             </h1>
 
             <div className="mb-4 flex flex-wrap gap-2">
               <Badge className="bg-[#e6e0cf] text-[#3c3022] hover:bg-[#d9d0b8]">
-                {formatJobType(job.type)}
+                {formatJobType(jobData.job.type)}
               </Badge>
               <Badge className="bg-[#e6e0cf] text-[#3c3022] hover:bg-[#d9d0b8]">
-                {formatShiftType(job.shiftType)}
+                {formatShiftType(jobData.job.shiftType)}
               </Badge>
             </div>
 
             <div className="flex items-start gap-2 text-[#3c3022]">
               <MapPin className="mt-0.5 h-5 w-5 text-[#8b6e4e]" />
-              <span>{job.address}</span>
+              <span>{jobData.job.address}</span>
             </div>
           </div>
 
@@ -150,7 +148,7 @@ export default function JobDetailsPage() {
                   <Clock className="h-5 w-5 text-[#8b6e4e]" />
                   <span className="text-[#3c3022]">
                     <span className="font-medium">Shift Length:</span>{" "}
-                    {job.shiftLengthHours} hours
+                    {jobData.job.shiftLengthHours} hours
                   </span>
                 </div>
 
@@ -158,7 +156,7 @@ export default function JobDetailsPage() {
                   <User className="h-5 w-5 text-[#8b6e4e]" />
                   <span className="text-[#3c3022]">
                     <span className="font-medium">Posted by:</span>{" "}
-                    {job.owner.firstName} {job.owner.lastName}
+                    {jobData.job.owner.firstName} {jobData.job.owner.lastName}
                   </span>
                 </div>
 
@@ -166,7 +164,7 @@ export default function JobDetailsPage() {
                   <Calendar className="h-5 w-5 text-[#8b6e4e]" />
                   <span className="text-[#3c3022]">
                     <span className="font-medium">Created:</span>{" "}
-                    {formatDate(job.createdAt)}
+                    {formatDate(jobData.job.createdAt)}
                   </span>
                 </div>
 
@@ -174,14 +172,14 @@ export default function JobDetailsPage() {
                   <Calendar className="h-5 w-5 text-[#8b6e4e]" />
                   <span className="text-[#3c3022]">
                     <span className="font-medium">Updated:</span>{" "}
-                    {formatDate(job.updatedAt)}
+                    {formatDate(jobData.job.updatedAt)}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Briefcase className="h-5 w-5 text-[#8b6e4e]" />
                   <span className="text-[#3c3022]">
-                    <span className="font-medium">Job ID:</span> {job.id}
+                    <span className="font-medium">Job ID:</span> {jobData.job.id}
                   </span>
                 </div>
               </div>
@@ -197,14 +195,14 @@ export default function JobDetailsPage() {
                   Access Key:
                 </div>
                 <div className="break-all rounded bg-white p-3 font-mono text-sm">
-                  {job.accessKey}
+                  {jobData.job.accessKey}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <div className="font-medium text-[#3c3022]">Keywords:</div>
                 <div className="flex flex-wrap gap-2">
-                  {keywords.map(
+                  {jobData.keywords.map(
                     (keyword: string, index: number) =>
                       keyword.length > 0 && (
                         <Badge
@@ -228,7 +226,7 @@ export default function JobDetailsPage() {
             <div className="rounded-md bg-[#e6e0cf] p-4">
               <div className="rounded-md bg-white p-4">
                 <p className="whitespace-pre-line text-[#3c3022]">
-                  {job.description}
+                  {jobData.job.description}
                 </p>
               </div>
             </div>
