@@ -171,6 +171,7 @@ export async function checkSurveyCompletion() {
     }
 
     const result = (await response.json()) as SurveyCompletionStatus;
+    console.log(result);
     return { success: true, data: result };
   } catch (error) {
     if (error instanceof Error) {

@@ -142,10 +142,15 @@ export interface Reply {
   system: string;
 }
 
-export interface CheckStatus {
-  status: number | null;
-  message: string;
-  access_key: string; // Assuming audio_base64 is a base64 encoded string
+export interface GetApplicants {
+  status: string;
+  applicants: Applicant[];
+}
+
+interface Applicant {
+  name: string;
+  email: string;
+  is_finished: number;
 }
 
 function mapQuestions(questions: Question[]): MappedQuestions {
@@ -431,6 +436,37 @@ export async function interviewStatus(accessKey: string, name: string, email: st
 
     // Parse the JSON response
     const json = (await response.json()) as InterviewStatus;
+
+    return { success: true, data: json};
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log(error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function getInterviewApplicants(accessKey: string) {
+  try {
+    console.log("Fetching interview applicants");
+
+    const response = await fetch(`${BASE_URL}get_applicants/${accessKey}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    // Check if the response is successful
+    if (!response.ok) {
+      console.log(response);
+      throw new Error("Failed to fetch chat history");
+    }
+
+    // Parse the JSON response
+    const json = (await response.json()) as GetApplicants;
+    console.log(json);
 
     return { success: true, data: json};
   } catch (error) {

@@ -55,7 +55,6 @@ const JobDetail: React.FC<{
 }> = ({ jobData, questions, setState, getAccessKey }) => {
   return (
     <>
-    <main className="container mx-auto px-4 py-8">
       <div className="rounded-lg bg-white p-6 shadow-sm">
         <div className="space-y-6">
           {/* Job header */}
@@ -241,7 +240,7 @@ const JobDetail: React.FC<{
               <Button
                 variant="outline"
                 className="h-12 border-[#8b6e4e] bg-[#8b6e4e] px-6 py-2 text-white hover:bg-[#6d563d]"
-                onClick={() => setState("view")}
+                onClick={() => setState("list")}
               >
                 View Applicants
               </Button>
@@ -260,7 +259,6 @@ const JobDetail: React.FC<{
           </div>
         </div>
       </div>
-    </main>
     </>
   );
 };

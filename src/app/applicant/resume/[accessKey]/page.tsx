@@ -34,11 +34,18 @@ export default function JobDetailsPage() {
         setLoading(false);
       }
 
+      if (response.data == "Item exists, result processing.") {
+        setStatus(
+          "Resume is currently being analyzed. Please return later; this will take a while.",
+        );
+      }
+
       if (response.data == "Item exists, result ready.") {
         setStatus("Fetching resume analysis result. Please wait");
       } else {
         return;
       }
+
       const similarity = await getSimilarityScore(hash!);
       const resumeData = await getResumeData(hash!);
       setResume(resumeData.data!);
@@ -55,7 +62,7 @@ export default function JobDetailsPage() {
   async function handleForward() {
     // Set loading state
     setIsNavigating(true);
-    
+
     try {
       // Check if the user has completed the system usability survey
       const surveyStatus = await checkSurveyCompletion();
@@ -65,10 +72,10 @@ export default function JobDetailsPage() {
         router.push(
           `/applicant/interview/${resume?.resume.job.accessKey}/results`,
         );
-      } else {
-        // User has not completed the survey, direct to interview
-        router.push(`/applicant/interview/${resume?.resume.job.accessKey}`);
       }
+
+      // User has not completed the survey, direct to interview
+      router.push(`/applicant/interview/${resume?.resume.job.accessKey}`);
     } catch (error) {
       console.error("Error checking survey completion:", error);
       // If there's an error, default to the interview path
@@ -107,9 +114,12 @@ export default function JobDetailsPage() {
                 >
                   {isNavigating ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                      Loading...
                     </>
-                  ) : "Interview"}
+                  ) : (
+                    "Interview"
+                  )}
                 </Button>
               </div>
             </>

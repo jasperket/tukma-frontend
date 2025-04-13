@@ -1,19 +1,6 @@
 "use client";
 
 import {
-  ArrowLeft,
-  Briefcase,
-  Calendar,
-  Clock,
-  MapPin,
-  User,
-  MessageSquare,
-  Code,
-} from "lucide-react";
-import { Button } from "~/components/ui/button";
-import { Badge } from "~/components/ui/badge";
-import Link from "next/link";
-import {
   getJobDetails,
   getJobQuestions,
   JobWithKeywords,
@@ -22,11 +9,16 @@ import {
 import { useEffect, useState } from "react";
 import JobDetail from "./components/JobDetails";
 import { useJobStore } from "~/app/stores/useJobStore";
+import ViewApplicants from "./components/ApplicantView";
+import { GetApplicants, getInterviewApplicants } from "~/app/actions/interview";
+import { GetAllResumeData, getResumeByJob, GetResumeData } from "~/app/actions/resume";
 
 export default function JobDetailsPage() {
+  const setJobInfoData = useJobStore((state) => state.setJobInfoData);
   const [jobData, setJobData] = useState<JobWithKeywords>();
   const [questions, setQuestions] = useState<Question[]>();
-  const setJobInfoData = useJobStore((state) => state.setJobInfoData);
+  const [applicants, setApplicants] = useState<GetApplicants>();
+  const [resume, setResume] = useState<GetAllResumeData>();
   const [loading, setLoading] = useState<boolean>(true);
   const [state, setState] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -39,12 +31,19 @@ export default function JobDetailsPage() {
     // Function to fetch job details and questions concurrently
     const fetchData = async () => {
       try {
-        const [jobRes, questionsRes] = await Promise.all([
+        const [jobRes, questionsRes, applicantsRes, resumeRes] = await Promise.all([
           getJobDetails(getAccessKey()),
           getJobQuestions(getAccessKey()),
+          getInterviewApplicants(getAccessKey()),
+          getResumeByJob(getAccessKey()),
         ]);
 
-        if (!jobRes.success || !questionsRes.success) {
+        if (
+          !jobRes.success ||
+          !questionsRes.success ||
+          !applicantsRes.success ||
+          !resumeRes.success 
+        ) {
           setError("Failed to load job details");
           return;
         }
@@ -52,6 +51,8 @@ export default function JobDetailsPage() {
         setJobData(jobRes.job);
         setQuestions(questionsRes.data);
         setJobInfoData(jobRes.job!);
+        setApplicants(applicantsRes.data!);
+        setResume(resumeRes.data);
       } catch (err) {
         setError("Failed to load job details");
       } finally {
@@ -85,11 +86,18 @@ export default function JobDetailsPage() {
   }
 
   return (
-    <JobDetail
-      jobData={jobData}
-      questions={questions!}
-      setState={setState}
-      getAccessKey={getAccessKey}
-    />
+    <main className="container mx-auto px-4 py-8">
+      {state === "" && (
+        <JobDetail
+          jobData={jobData}
+          questions={questions!}
+          setState={setState}
+          getAccessKey={getAccessKey}
+        />
+      )}
+      {state === "list" && (
+        <ViewApplicants applicants={applicants!} setState={setState} />
+      )}
+    </main>
   );
 }

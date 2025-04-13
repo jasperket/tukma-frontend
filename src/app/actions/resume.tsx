@@ -17,10 +17,6 @@ interface UploadForJob {
   hash: string;
 }
 
-interface UploadForJobError {
-  error: string;
-}
-
 interface CheckResumeStatus {
   result: string;
 }
@@ -63,9 +59,9 @@ interface Job {
   type: string; // e.g., "FULL_TIME"
   shiftType: string; // e.g., "DAY_SHIFT"
   shiftLengthHours: number;
-  locationType: string; // e.g., "HYBRID"
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
+  locationType: string; // e.g., "ON_SITE"
+  createdAt: string;
+  updatedAt: string;
   owner: User;
 }
 
@@ -85,6 +81,11 @@ export interface CleanUpDuplicates {
 export interface GetResumeData {
   resume: ResumeWithJob;
   parsedResults: ParsedResults;
+}
+
+export interface GetAllResumeData {
+  job: Job;
+  resumes: GetResumeData[];
 }
 
 export async function uploadForJob(
@@ -290,6 +291,40 @@ export async function getResumeData(hash: string) {
     // Parse and return the successful response
     const data = (await response.json()) as GetResumeData;
     console.log(data);
+
+    return { success: true, data: data };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log(error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function getResumeByJob(accessKey: string) {
+  try {
+    console.log("Fetching all resume data");
+
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+    const response = await fetch(`${BASE_URL}job/${accessKey}`, {
+      method: "GET",
+      headers: {
+        Cookie: `jwt=${cookie?.value}`,
+      },
+      credentials: "include", // Include cookies in the request
+    });
+
+    // Check if the response is successful
+    if (!response.ok) {
+      console.log(response);
+      throw new Error("Failed to fetch resume data");
+    }
+
+    // Parse and return the successful response
+    const data = (await response.json()) as GetAllResumeData;
+    console.dir(data, {depth: null});
 
     return { success: true, data: data };
   } catch (error) {
