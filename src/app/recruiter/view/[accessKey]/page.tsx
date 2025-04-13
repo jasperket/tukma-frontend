@@ -51,7 +51,7 @@ export default function JobDetailsPage() {
         setJobData(jobRes.job);
         setQuestions(questionsRes.data);
         setJobInfoData(jobRes.job!);
-        setApplicants(applicantsRes.data!);
+        setApplicants(applicantsRes.data);
         setResume(resumeRes.data);
       } catch (err) {
         setError("Failed to load job details");
