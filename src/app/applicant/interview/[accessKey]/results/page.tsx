@@ -105,13 +105,13 @@ export default function InterviewResultsPage() {
   };
 
   // Convert score to percentage
-  const toPercentage = (score: number) => {
-    return Math.round(score * 10); // Scores are out of 10
+  const toPercentage = (score: number, maxScore = 10) => {
+    return Math.round((score / maxScore) * 100); // Convert to percentage
   };
 
   // Get color class based on score (red for low, yellow for medium, green for high)
-  const getScoreColorClass = (score: number) => {
-    const percentage = toPercentage(score);
+  const getScoreColorClass = (score: number, maxScore = 10) => {
+    const percentage = toPercentage(score, maxScore);
     if (percentage < 60) return "text-red-600 bg-red-100";
     if (percentage < 80) return "text-amber-600 bg-amber-100";
     return "text-green-600 bg-green-100";
@@ -226,9 +226,9 @@ export default function InterviewResultsPage() {
                         Communication Assessment
                       </CardTitle>
                       <div
-                        className={`rounded-full px-4 py-1 font-bold ${getScoreColorClass(commResults.overallScore)}`}
+                        className={`rounded-full px-4 py-1 font-bold ${getScoreColorClass(commResults.overallScore, 10)}`}
                       >
-                        {toPercentage(commResults.overallScore)}%
+                        {toPercentage(commResults.overallScore, 10)}%
                       </div>
                     </div>
                     <CardDescription>
@@ -296,9 +296,9 @@ export default function InterviewResultsPage() {
                         Technical Assessment
                       </CardTitle>
                       <div
-                        className={`rounded-full px-4 py-1 font-bold ${getScoreColorClass(techResults.overallScore)}`}
+                        className={`rounded-full px-4 py-1 font-bold ${getScoreColorClass(techResults.overallScore, 100)}`}
                       >
-                        {toPercentage(techResults.overallScore)}%
+                        {toPercentage(techResults.overallScore, 100)}%
                       </div>
                     </div>
                     <CardDescription>
@@ -311,12 +311,14 @@ export default function InterviewResultsPage() {
                       <h3 className="mb-3 flex items-center text-lg font-medium text-[#3c3022]">
                         <Activity className="mr-2 h-5 w-5 text-[#8b6e4e]" />
                         Overall Score: {techResults.overallScore.toFixed(2)}
-                        /10.00
+                        /100.00
                       </h3>
                       <div className="h-4 w-full overflow-hidden rounded-full bg-[#e6e0cf]">
                         <div
                           className="h-full bg-[#8b6e4e]"
-                          style={{ width: `${techResults.overallScore * 10}%` }}
+                          style={{
+                            width: `${toPercentage(techResults.overallScore, 100)}%`,
+                          }}
                         ></div>
                       </div>
                     </div>
@@ -334,9 +336,9 @@ export default function InterviewResultsPage() {
                                   Question {index + 1}
                                 </h3>
                                 <div
-                                  className={`rounded-full px-3 py-1 text-sm font-medium ${getScoreColorClass(result.score)}`}
+                                  className={`rounded-full px-3 py-1 text-sm font-medium ${getScoreColorClass(result.score, 100)}`}
                                 >
-                                  Score: {result.score.toFixed(2)}/10.00
+                                  Score: {result.score.toFixed(2)}/100.00
                                 </div>
                               </div>
                               <div className="mb-4 rounded-lg bg-[#f5f2ea] p-4">
