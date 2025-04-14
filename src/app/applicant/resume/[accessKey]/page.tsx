@@ -36,7 +36,7 @@ export default function JobDetailsPage() {
 
       if (response.data == "Item exists, result processing.") {
         setStatus(
-          "Resume is currently being analyzed. Please return later; this will take a while.",
+          "The resume is currently being analyzed. Please return in 5 hours, as this will take some time.",
         );
       }
 
