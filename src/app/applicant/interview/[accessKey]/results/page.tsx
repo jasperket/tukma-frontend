@@ -7,6 +7,7 @@ import {
   Code,
   Activity,
   AlertCircle,
+  FileText,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { Button } from "~/components/ui/button";
@@ -25,9 +26,11 @@ import {
   type TechnicalResultsResponse,
   type TechnicalResult,
 } from "~/app/actions/interview";
+import { getJobApplication } from "~/app/actions/resume";
 
 export default function InterviewResultsPage() {
   const [accessKey, setAccessKey] = useState<string>("");
+  const [resumeHash, setResumeHash] = useState<string | undefined>("");
   const [activeTab, setActiveTab] = useState<string>("communication");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [commResults, setCommResults] = useState<
@@ -54,11 +57,13 @@ export default function InterviewResultsPage() {
       }
 
       try {
-        // Fetch both results in parallel
-        const [commResponse, techResponse] = await Promise.all([
-          getCommunicationResults(key),
-          getTechnicalResults(key),
-        ]);
+        // Fetch interview results and job application data in parallel
+        const [commResponse, techResponse, jobApplicationResponse] =
+          await Promise.all([
+            getCommunicationResults(key),
+            getTechnicalResults(key),
+            getJobApplication(key),
+          ]);
 
         if (commResponse.success) {
           setCommResults(commResponse.data);
@@ -77,7 +82,17 @@ export default function InterviewResultsPage() {
           );
         }
 
-        // Show error if both failed
+        // Get resume hash if job application fetch was successful
+        if (jobApplicationResponse.success) {
+          setResumeHash(jobApplicationResponse?.data?.resume.resumeHash);
+        } else {
+          console.error(
+            "Failed to fetch job application data:",
+            jobApplicationResponse.error,
+          );
+        }
+
+        // Show error if both interview results failed
         if (!commResponse.success && !techResponse.success) {
           setError("Failed to load interview results. Please try again later.");
         }
@@ -167,12 +182,27 @@ export default function InterviewResultsPage() {
         </Link>
       </div>
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-[#3c3022]">Interview Results</h1>
-        <p className="mt-2 text-[#6b5d4c]">
-          Review your interview performance and feedback from our AI evaluation
-          system.
-        </p>
+      <div className="mb-8 flex flex-col items-start justify-between md:flex-row md:items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-[#3c3022]">
+            Interview Results
+          </h1>
+          <p className="mt-2 text-[#6b5d4c]">
+            Review your interview performance and feedback from our AI
+            evaluation system.
+          </p>
+        </div>
+        {resumeHash && (
+          <Link
+            href={`/applicant/resume/${resumeHash}`}
+            className="mt-4 md:mt-0"
+          >
+            <Button className="bg-[#8b6e4e] text-white hover:bg-[#6b5d4c]">
+              <FileText className="mr-2 h-4 w-4" />
+              View Resume Results
+            </Button>
+          </Link>
+        )}
       </div>
 
       {noResultsAvailable ? (
