@@ -16,13 +16,19 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getJobDetails, JobWithKeywords } from "~/app/actions/recruiter";
 import PDFUpload from "../../components/PDFUpload";
-import { getJobApplication, GetMyApplicationForJob, uploadForJob } from "~/app/actions/resume";
+import {
+  getJobApplication,
+  GetMyApplicationForJob,
+  uploadForJob,
+} from "~/app/actions/resume";
+import { interviewStatus } from "~/app/actions/interview";
+import { checkSurveyCompletion } from "~/app/actions/survey";
 
 // Format job type and shift type for display
 const formatJobType = (type: string) => {
   // Add null/undefined check
-  if (!type) return '';
-  
+  if (!type) return "";
+
   return type
     .replace("_", " ")
     .toLowerCase()
@@ -31,8 +37,8 @@ const formatJobType = (type: string) => {
 
 const formatShiftType = (type: string) => {
   // Add null/undefined check
-  if (!type) return '';
-  
+  if (!type) return "";
+
   return type
     .split("_")
     .map((word) => word.toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase()))
@@ -59,7 +65,11 @@ export default function JobDetailsPage() {
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploaded, setIsUploaded] = useState<boolean>(false);
   const [file, setFile] = useState<File | null>();
-  const [application, setApplication] = useState<GetMyApplicationForJob | null>(null);
+  const [application, setApplication] = useState<GetMyApplicationForJob | null>(
+    null,
+  );
+  const [hasInterview, setHasInterview] = useState<boolean>(false);
+  const [surveyCompleted, setSurveyCompleted] = useState<boolean>(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -73,6 +83,43 @@ export default function JobDetailsPage() {
       const applicationData = await getJobApplication(accessKey!);
       if (applicationData.success) {
         setApplication(applicationData.data!);
+
+        // Check if user has already completed an interview
+        if (applicationData.data) {
+          try {
+            // Log the application data structure
+            console.log("Application data:", applicationData.data);
+
+            // Get user details
+            // The owner can be accessed either from the resume or directly depending on the API response
+            const owner = applicationData.data.resume.owner;
+            const name = owner.firstName + " " + owner.lastName;
+            const email = owner.username; // Assuming username is email
+
+            const interviewStatusData = await interviewStatus(
+              accessKey!,
+              name,
+              email,
+            );
+            console.log("Interview status:", interviewStatusData?.data?.status);
+            if (
+              interviewStatusData.success &&
+              (interviewStatusData?.data?.status === "finished" ||
+                interviewStatusData?.data?.status === "COMPLETED")
+            ) {
+              setHasInterview(true);
+
+              // If interview is completed, check if survey is completed
+              const surveyStatus = await checkSurveyCompletion();
+              console.log("Survey status:", surveyStatus);
+              if (surveyStatus.success && surveyStatus?.data?.isComplete) {
+                setSurveyCompleted(true);
+              }
+            }
+          } catch (error) {
+            console.error("Error checking interview status:", error);
+          }
+        }
       }
 
       setLoading(false);
@@ -83,9 +130,21 @@ export default function JobDetailsPage() {
 
   async function uploadFile() {
     setUploading(true);
+
     if (application !== null) {
       setUploading(false);
-      router.push(`/applicant/resume/${application.resume.resumeHash}`);
+      if (hasInterview) {
+        if (surveyCompleted) {
+          // If has application, completed interview, and completed survey
+          router.push(`/applicant/interview/${jobData?.job.accessKey}/results`);
+        } else {
+          // If has application, completed interview, but no survey
+          router.push(`/applicant/interview/${jobData?.job.accessKey}`);
+        }
+      } else {
+        // If has application but no interview yet
+        router.push(`/applicant/interview/${jobData?.job.accessKey}`);
+      }
       return;
     }
 
@@ -107,14 +166,12 @@ export default function JobDetailsPage() {
       return; // Exit early if access key is invalid or missing
     }
 
-    const response = await uploadForJob(
-      file,
-      jobData?.job.accessKey,
-    );
+    const response = await uploadForJob(file, jobData?.job.accessKey);
 
     if (response.success) {
       console.log("Resume uploaded successfully. Hash:", response.hash);
-      router.push(`/applicant/resume/${response.hash}`);
+      // After successful upload, redirect to interview page instead of resume view
+      router.push(`/applicant/interview/${jobData?.job.accessKey}`);
     }
   }
 
@@ -252,7 +309,11 @@ export default function JobDetailsPage() {
               </Link>
               <Button
                 variant="outline"
-                disabled={loading ? true : (!uploaded && application === null) || uploading}
+                disabled={
+                  loading
+                    ? true
+                    : (!uploaded && application === null) || uploading
+                }
                 className="flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
                 onClick={() => uploadFile()}
               >
@@ -261,8 +322,16 @@ export default function JobDetailsPage() {
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                     {application !== null ? "Loading..." : "Uploading..."}
                   </>
+                ) : application === null ? (
+                  "Apply"
+                ) : hasInterview ? (
+                  surveyCompleted ? (
+                    "View Results"
+                  ) : (
+                    "Continue Interview"
+                  )
                 ) : (
-                  application !== null ? "View Result" : "Apply"
+                  "Start Interview"
                 )}
               </Button>
             </div>
