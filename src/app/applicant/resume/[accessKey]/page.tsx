@@ -89,9 +89,25 @@ export default function JobDetailsPage() {
   return (
     <>
       <main className="mx-auto max-w-screen-lg px-4 py-8">
+        <div className="mb-6">
+          <Link href="/applicant">
+            <Button
+              variant="ghost"
+              className="ml-[-1rem] text-[#3c3022] hover:bg-[#e6e0cf]"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Job Postings
+            </Button>
+          </Link>
+        </div>
+        
         <div className="rounded-lg bg-white p-6 shadow-sm">
           {loading && <p>Loading...</p>}
-          {!resume && status.length > 0 && <p>{status}</p>}
+          {!resume && status.length > 0 && (
+            <div>
+              <p>{status}</p>
+            </div>
+          )}
 
           {resume && (
             <>
