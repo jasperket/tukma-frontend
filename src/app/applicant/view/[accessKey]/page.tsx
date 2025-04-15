@@ -310,14 +310,17 @@ export default function JobDetailsPage() {
               <Button
                 variant="outline"
                 disabled={
-                  loading
-                    ? true
-                    : (!uploaded && application === null) || uploading
+                  loading || uploading || (!uploaded && application === null)
                 }
                 className="flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
                 onClick={() => uploadFile()}
               >
-                {uploading ? (
+                {loading ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    Loading
+                  </>
+                ) : uploading ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                     {application !== null ? "Loading..." : "Uploading..."}
