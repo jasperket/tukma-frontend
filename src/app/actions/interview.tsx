@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 
 const BASE_URL = "https://tukma-backend-copy-production.up.railway.app/";
+// const BASE_URL = "http://127.0.0.1:5000/";
 
 export interface Question {
   id: number;
@@ -145,6 +146,10 @@ export interface Reply {
 export interface GetApplicants {
   status: string;
   applicants: Applicant[];
+}
+
+export interface GenerateAudio {
+  audio_url: string;
 }
 
 interface Applicant {
@@ -322,7 +327,7 @@ export async function reply(
         accessKey: accessKey,
         name: name,
         email: email,
-        message: message
+        message: message,
       }),
     });
 
@@ -346,16 +351,23 @@ export async function reply(
   }
 }
 
-export async function getMessages(accessKey: string, name: string, email: string) {
+export async function getMessages(
+  accessKey: string,
+  name: string,
+  email: string,
+) {
   try {
     console.log("Fetching chat history");
 
-    const response = await fetch(`${BASE_URL}get_messages/${accessKey}/${name}/${email}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${BASE_URL}get_messages/${accessKey}/${name}/${email}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     // Check if the response is successful
     if (!response.ok) {
@@ -369,7 +381,7 @@ export async function getMessages(accessKey: string, name: string, email: string
     console.log(json);
     console.log(json.messages);
 
-    return { success: true, data: json, messages: messages};
+    return { success: true, data: json, messages: messages };
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);
@@ -417,27 +429,68 @@ export async function getQuestions(accessKey: string) {
   }
 }
 
-export async function interviewStatus(accessKey: string, name: string, email: string) {
+export async function interviewStatus(
+  accessKey: string,
+  name: string,
+  email: string,
+) {
   try {
     console.log("Fetching chat history");
 
-    const response = await fetch(`${BASE_URL}interview_status/${accessKey}/${name}/${email}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${BASE_URL}interview_status/${accessKey}/${name}/${email}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     // Check if the response is successful
     if (!response.ok) {
       console.log(response);
-      throw new Error("Failed to fetch chat history");
+      throw new Error("Failed to interview status");
     }
 
     // Parse the JSON response
     const json = (await response.json()) as InterviewStatus;
 
-    return { success: true, data: json};
+    return { success: true, data: json };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log(error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function generateAudio(text: string) {
+  try {
+    console.log("Generating audio");
+
+    const response = await fetch(`${BASE_URL}generate_audio`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: text,
+      }),
+    });
+
+    // Check if the response is successful
+    if (!response.ok) {
+      console.log(response);
+      throw new Error("Failed to generate audio");
+    }
+
+    // Parse the JSON response
+    const json = (await response.json()) as GenerateAudio;
+    console.log(json);
+
+    return { success: true, data: json };
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);
@@ -461,14 +514,14 @@ export async function getInterviewApplicants(accessKey: string) {
     // Check if the response is successful
     if (!response.ok) {
       console.log(response);
-      throw new Error("Failed to fetch chat history");
+      throw new Error("Failed to fetch interview applicants");
     }
 
     // Parse the JSON response
     const json = (await response.json()) as GetApplicants;
     console.log(json);
 
-    return { success: true, data: json};
+    return { success: true, data: json };
   } catch (error) {
     if (error instanceof Error) {
       console.log(error.message);
@@ -482,13 +535,16 @@ export async function getInterviewApplicants(accessKey: string) {
  * Submit interview messages to the backend API
  * This action is called when the interview is completed
  */
-export async function submitInterviewMessages(accessKey: string, messages: MessageToSubmit[]) {
+export async function submitInterviewMessages(
+  accessKey: string,
+  messages: MessageToSubmit[],
+) {
   try {
     console.log("Submitting interview messages");
-    
+
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");
-    
+
     const response = await fetch(
       `https://backend.tukma.work/api/v1/interview/messages/${accessKey}`,
       {
@@ -499,19 +555,21 @@ export async function submitInterviewMessages(accessKey: string, messages: Messa
         },
         credentials: "include", // Include cookies in the request
         body: JSON.stringify({
-          messages: messages
+          messages: messages,
         }),
-      }
+      },
     );
 
     // Check if the response is successful
     if (!response.ok) {
       console.log("Failed to submit interview messages:", response);
-      throw new Error(`Failed to submit interview messages: ${response.status}`);
+      throw new Error(
+        `Failed to submit interview messages: ${response.status}`,
+      );
     }
 
     // Parse the JSON response
-    const result = await response.json() as MessageSubmitResponse;
+    const result = (await response.json()) as MessageSubmitResponse;
     console.log("Messages submitted successfully:", result);
 
     return { success: true, data: result };
@@ -530,10 +588,10 @@ export async function submitInterviewMessages(accessKey: string, messages: Messa
 export async function getCommunicationResults(accessKey: string) {
   try {
     console.log("Fetching communication results");
-    
+
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");
-    
+
     const response = await fetch(
       `https://backend.tukma.work/api/v1/interview/communication-results/my/${accessKey}`,
       {
@@ -543,17 +601,19 @@ export async function getCommunicationResults(accessKey: string) {
           Cookie: `jwt=${cookie?.value}`,
         },
         credentials: "include", // Include cookies in the request
-      }
+      },
     );
 
     // Check if the response is successful
     if (!response.ok) {
       console.log("Failed to fetch communication results:", response);
-      throw new Error(`Failed to fetch communication results: ${response.status}`);
+      throw new Error(
+        `Failed to fetch communication results: ${response.status}`,
+      );
     }
 
     // Parse the JSON response
-    const result = await response.json() as CommunicationResultsResponse;
+    const result = (await response.json()) as CommunicationResultsResponse;
     console.log("Communication results fetched successfully:", result);
 
     return { success: true, data: result };
@@ -572,10 +632,10 @@ export async function getCommunicationResults(accessKey: string) {
 export async function getTechnicalResults(accessKey: string) {
   try {
     console.log("Fetching technical results");
-    
+
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");
-    
+
     const response = await fetch(
       `https://backend.tukma.work/api/v1/interview/technical-results/my/${accessKey}`,
       {
@@ -585,7 +645,7 @@ export async function getTechnicalResults(accessKey: string) {
           Cookie: `jwt=${cookie?.value}`,
         },
         credentials: "include", // Include cookies in the request
-      }
+      },
     );
 
     // Check if the response is successful
@@ -595,7 +655,7 @@ export async function getTechnicalResults(accessKey: string) {
     }
 
     // Parse the JSON response
-    const result = await response.json() as TechnicalResultsResponse;
+    const result = (await response.json()) as TechnicalResultsResponse;
     console.log("Technical results fetched successfully:", result);
 
     return { success: true, data: result };

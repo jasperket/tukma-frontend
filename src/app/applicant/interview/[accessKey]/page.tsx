@@ -5,6 +5,7 @@ import { CheckCircle, ChevronRight, Mic, MicOff, XCircle } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import {
+  generateAudio,
   getMessages,
   getQuestions,
   interviewStatus,
@@ -25,6 +26,7 @@ import {
   submitSurvey,
   Question as SurveyQuestion,
 } from "~/app/actions/survey";
+import InvisibleAudioPlayer from "./components/AudioPlayer";
 
 interface Props {
   children: ReactNode;
@@ -128,6 +130,7 @@ export default function InterviewPage() {
     useState<string>("uninitiated");
   const [messagesSubmitted, setMessagesSubmitted] = useState<boolean>(false);
   const [submittingMessages, setSubmittingMessages] = useState<boolean>(false);
+  const [audioUrl, setAudioUrl] = useState<string>("");
 
   const [showSurvey, setShowSurvey] = useState<boolean>(false);
   const [surveySubmitted, setSurveySubmitted] = useState<boolean>(false);
@@ -286,6 +289,10 @@ export default function InterviewPage() {
       const currentTranscript = transcriptRef.current;
       setTranscript(currentTranscript);
 
+      if (!currentTranscript) {
+        return;
+      }
+
       async function sendReply() {
         setThinking(true);
 
@@ -301,9 +308,8 @@ export default function InterviewPage() {
           nameRef.current!,
           emailRef.current!,
         );
-        setThinking(false);
+
         if (response2.success) {
-          setTranscript("");
           modifyMessage(response2.data!.messages);
 
           // Check if the interview status has changed
@@ -327,9 +333,6 @@ export default function InterviewPage() {
             }
           }
         }
-        if (response.success) {
-          speech(response.data!.system);
-        }
       }
 
       sendReply();
@@ -342,7 +345,7 @@ export default function InterviewPage() {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
-  }, [messages, thinking, transcript, messagesSubmitted]);
+  }, [messages, thinking, transcript, messagesSubmitted, loading]);
 
   useEffect(() => {
     transcriptRef.current = transcript;
@@ -374,8 +377,26 @@ export default function InterviewPage() {
   }, [surveySubmitted, interview_status, router]);
 
   function modifyMessage(message: Message[]) {
+    const current_message = message[message.length - 1];
+
+    async function getAudio() {
+      const audioRes = await generateAudio(current_message!.content);
+
+      if (!audioRes.success) {
+        return;
+      }
+
+      setAudioUrl(audioRes.data!.audio_url);
+    }
+
+    getAudio();
+
     const messages = message.slice(1);
-    setMessages(messages);
+    setTimeout(() => {
+      setThinking(false);
+      setMessages(messages);
+      setTranscript("");
+    }, 2000);
   }
 
   // Submit interview messages to the backend
@@ -439,79 +460,6 @@ export default function InterviewPage() {
         console.error("Error stopping speech recognition:", error);
       }
     }
-  }
-
-  function speech(text: string) {
-    if (!synthRef.current || !text || text === undefined) {
-      console.log("Synth not ready or no text to speak.");
-      console.log(text);
-      return;
-    }
-    const chunks = splitTextIntoChunks(text);
-    chunksRef.current = chunks;
-    numberRef.current = 0;
-    utter(chunksRef.current[0]!);
-  }
-
-  function utter(text: string) {
-    if (!text) {
-      return;
-    }
-    synthRef.current?.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.pitch = 1;
-    utterance.rate = 1;
-
-    utterance.onstart = () => {
-      console.log("Speech started.");
-    };
-    utterance.onend = () => {
-      console.log("Speech finished.");
-      synthRef.current?.cancel();
-      numberRef.current = numberRef.current + 1;
-      if (numberRef.current === chunksRef.current.length) {
-        numberRef.current = 0;
-        chunksRef.current = [];
-        return;
-      }
-      utter(chunksRef.current[numberRef.current]!);
-    };
-    utterance.onerror = (event) => {
-      console.error("Speech synthesis error:", event.error);
-    };
-
-    console.log(utterance); //IMPORTANT!! Do not remove: Logging the object out fixes some onend firing issues.
-    //placing the speak invocation inside a callback fixes ordering and onend issues.
-    setTimeout(() => {
-      synthRef.current?.speak(utterance);
-    }, 0);
-
-    async function init() {
-      const interview_status = await interviewStatus(
-        getKey(),
-        nameRef.current!,
-        emailRef.current!,
-      );
-      if (!interview_status.success) {
-        setError(true);
-        return;
-      }
-      setInterviewStatus(interview_status.data!.status);
-
-      // If the interview is finished, submit messages
-      if (
-        interview_status.data!.status === "finished" &&
-        messages &&
-        messages.length > 0 &&
-        !messagesSubmitted
-      ) {
-        await submitMessagesToBackend();
-      }
-    }
-
-    init();
   }
 
   const handleSubmitSurvey = async () => {
@@ -584,9 +532,6 @@ export default function InterviewPage() {
       nameRef.current!,
       emailRef.current!,
     );
-    if (interview.success) {
-      speech(interview.data!.system);
-    }
 
     const messages = await getMessages(
       getKey(),
@@ -596,8 +541,6 @@ export default function InterviewPage() {
     if (messages?.success) {
       modifyMessage(messages.data!.messages);
     }
-
-    setThinking(false);
   }
 
   const handleNextQuestion = () => {
@@ -617,6 +560,8 @@ export default function InterviewPage() {
 
   return (
     <>
+      <InvisibleAudioPlayer audioUrl={audioUrl} />
+
       <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center p-6">
         <div className="w-full rounded-xl bg-white p-6 shadow-sm md:p-8">
           <h1 className="mb-6 text-2xl font-bold text-[#3c3c3c] md:text-3xl">
