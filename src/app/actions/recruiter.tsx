@@ -49,7 +49,7 @@ export interface User {
   firstName: string;
   lastName: string;
   isRecruiter: boolean;
-  companyName: string;
+  companyName?: string;
 }
 
 export interface UserAlt {

@@ -152,10 +152,20 @@ export interface GenerateAudio {
   audio_url: string;
 }
 
-interface Applicant {
+export interface Applicant {
   name: string;
   email: string;
   is_finished: number;
+}
+
+export interface FinishedInterviews {
+  name: string;
+  email: string;
+}
+
+export interface FinishedApplicants {
+  finished_interviews: FinishedInterviews[];
+  status: string;
 }
 
 function mapQuestions(questions: Question[]): MappedQuestions {
@@ -519,6 +529,37 @@ export async function getInterviewApplicants(accessKey: string) {
 
     // Parse the JSON response
     const json = (await response.json()) as GetApplicants;
+    console.log(json);
+
+    return { success: true, data: json };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log(error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function getFinishedInterviews(accessKey: string) {
+  try {
+    console.log("Fetching interview applicants");
+
+    const response = await fetch(`${BASE_URL}finished_interviews/${accessKey}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    // Check if the response is successful
+    if (!response.ok) {
+      console.log(response);
+      throw new Error("Failed to fetch interview applicants");
+    }
+
+    // Parse the JSON response
+    const json = (await response.json()) as FinishedApplicants;
     console.log(json);
 
     return { success: true, data: json };

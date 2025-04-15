@@ -100,7 +100,7 @@ export default function JobDetailsPage() {
             </Button>
           </Link>
         </div>
-        
+
         <div className="rounded-lg bg-white p-6 shadow-sm">
           {loading && <p>Loading...</p>}
           {!resume && status.length > 0 && (
@@ -111,7 +111,7 @@ export default function JobDetailsPage() {
 
           {resume && (
             <>
-              <SkillsRadarChart resumeData={resume} similarity={similarity!} />
+              <SkillsRadarChart resumeData={resume} />
 
               <div className="flex gap-4 border-t border-[#e6e0cf] pt-4">
                 <Button

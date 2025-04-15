@@ -168,7 +168,7 @@ export async function checkResumeStatus(hash: string) {
 
 export async function getSimilarityScore(hash: string) {
   try {
-    console.log("Checking resume status");
+    console.log("Fetching resume similarity score");
 
     const cookieStore = await cookies();
     const cookie = cookieStore.get("jwt");

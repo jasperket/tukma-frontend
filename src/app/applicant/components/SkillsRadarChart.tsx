@@ -49,7 +49,6 @@ const chartConfig = {
 
 interface SkillsRadarChartProps {
   resumeData: GetResumeData;
-  similarity: GetSimilarityScore;
 }
 
 interface TransformedResult {
@@ -58,10 +57,7 @@ interface TransformedResult {
   ngram: string;
 }
 
-const SkillsRadarChart: React.FC<SkillsRadarChartProps> = ({
-  resumeData,
-  similarity,
-}) => {
+const SkillsRadarChart: React.FC<SkillsRadarChartProps> = ({ resumeData }) => {
   const [result, setResult] = useState<TransformedResult[]>(
     transformParsedResults(resumeData.parsedResults),
   );
@@ -78,6 +74,10 @@ const SkillsRadarChart: React.FC<SkillsRadarChartProps> = ({
         };
       })
       .sort((a, b) => b.similarity_score - a.similarity_score); // Sort by similarity_score in descending order
+  }
+
+  if (!resumeData.resume.results) {
+    return <h1 className="text-3xl">No Data</h1>;
   }
 
   return (
@@ -116,7 +116,7 @@ const SkillsRadarChart: React.FC<SkillsRadarChartProps> = ({
         </RadarChart>
       </ChartContainer>
 
-      <div className="mt-8 space-y-4 mb-4">
+      <div className="mb-4 mt-8 space-y-4">
         {result.map(({ skill_name, similarity_score, ngram }, index) => {
           const scorePercentage = Math.round(similarity_score * 100);
           return (
