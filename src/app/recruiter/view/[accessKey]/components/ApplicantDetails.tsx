@@ -7,6 +7,7 @@ import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import Transcript from "./Transcript";
+import Analysis from "./Analysis";
 
 const ApplicantDetails: React.FC<{
   resume: GetResumeData;
@@ -57,7 +58,9 @@ const ApplicantDetails: React.FC<{
           <TabsContent value="interview">
             <Transcript user={resume.resume.owner} />
           </TabsContent>
-          <TabsContent value="analysis"></TabsContent>
+          <TabsContent value="analysis">
+            <Analysis resume={resume}/>
+          </TabsContent>
         </Tabs>
       </Card>
     </>

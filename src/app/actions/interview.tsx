@@ -708,3 +708,81 @@ export async function getTechnicalResults(accessKey: string) {
     return { success: false, error: "An unexpected error occurred" };
   }
 }
+
+export async function getTechnicalResultsById(accessKey: string, userId: number) {
+  try {
+    console.log("Fetching technical results");
+
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+
+    const response = await fetch(
+      `https://backend.tukma.work/api/v1/interview/technical-results/job/${accessKey}/user/${userId}`,
+      {
+        method: "GET",
+        headers: {
+          Cookie: `jwt=${cookie?.value}`,
+        },
+        credentials: "include", // Include cookies in the request
+      },
+    );
+
+    // Check if the response is successful
+    if (!response.ok) {
+      console.log("Failed to fetch technical results:", response);
+      throw new Error(`Failed to fetch technical results: ${response.status}`);
+    }
+
+    // Parse the JSON response
+    const result = (await response.json()) as TechnicalResultsResponse;
+    console.log("Technical results fetched successfully:", result);
+
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log("Error fetching technical results:", error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function getCommunicationResultsById(accessKey: string, userId: number) {
+  try {
+    console.log("Fetching communication results");
+
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("jwt");
+
+    const response = await fetch(
+      `https://backend.tukma.work/api/v1/interview/communication-results/job/${accessKey}/user/${userId}`,
+      {
+        method: "GET",
+        headers: {
+          Cookie: `jwt=${cookie?.value}`,
+        },
+        credentials: "include", // Include cookies in the request
+      },
+    );
+
+    // Check if the response is successful
+    if (!response.ok) {
+      console.log("Failed to fetch communication results:", response);
+      throw new Error(
+        `Failed to fetch communication results: ${response.status}`,
+      );
+    }
+
+    // Parse the JSON response
+    const result = (await response.json()) as CommunicationResultsResponse;
+    console.log("Communication results fetched successfully:", result);
+
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log("Error fetching communication results:", error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}

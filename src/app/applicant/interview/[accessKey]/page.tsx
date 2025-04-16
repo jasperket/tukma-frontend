@@ -571,7 +571,7 @@ export default function InterviewPage() {
           <div className="mb-8 rounded-lg bg-[#f8f7f4] md:p-8">
             {/* Conversation Area */}
             <div
-              className="mb-6 max-h-[350px] min-h-[350] space-y-6 overflow-y-auto scroll-smooth pr-2"
+              className="mb-6 max-h-[450px] min-h-[450px] space-y-6 overflow-y-auto scroll-smooth pr-2"
               ref={chatContainerRef}
               style={{ scrollBehavior: "smooth" }}
             >

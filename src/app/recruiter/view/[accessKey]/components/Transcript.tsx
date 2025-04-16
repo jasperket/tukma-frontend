@@ -49,7 +49,7 @@ const Transcript: React.FC<{
 
   return (
     <>
-      <div className="w-full rounded-xl bg-white p-6 md:p-8">
+      <div className="w-full rounded-xl bg-white px-6 pt-6 md:px-8 md:pt-8">
         <h1 className="mb-6 text-2xl font-bold text-[#3c3c3c] md:text-3xl">
           Interview
         </h1>
@@ -57,7 +57,7 @@ const Transcript: React.FC<{
         <div className="mb-8 rounded-lg bg-[#f8f7f4] md:p-8">
           {/* Conversation Area */}
           <div
-            className="mb-6 max-h-[350px] min-h-[350] space-y-6 overflow-y-auto scroll-smooth pr-2"
+            className="mb-6 max-h-[450px] min-h-[450px] space-y-6 overflow-y-auto scroll-smooth pr-2"
             ref={chatContainerRef}
             style={{ scrollBehavior: "smooth" }}
           >
