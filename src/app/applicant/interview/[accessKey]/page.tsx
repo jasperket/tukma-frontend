@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode, useEffect, useRef, useState } from "react";
-import { CheckCircle, ChevronRight, Mic, MicOff, XCircle } from "lucide-react";
+import { CheckCircle, ChevronRight, Mic, MicOff } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import {
@@ -155,9 +155,10 @@ export default function InterviewPage() {
 
   useEffect(() => {
     const ua = navigator.userAgent;
-    if (ua.includes("Firefox")) {
+    if (ua.includes("Gecko")) {
+      console.log(ua);
       setUserAgent(
-        "Please use a Chromium or WebKit browser to proceed with this interview",
+        "Please use a Chrome-based browser, such as Google Chrome or Brave, or a WebKit browser, to proceed with this interview.",
       );
       setLoading(false);
       return;
@@ -598,12 +599,7 @@ export default function InterviewPage() {
                   An error occured, please refresh the page
                 </p>
               )}
-              {user_agent && (
-                <p className="text-red-500">
-                  Please use a Chromium or WebKit browser to proceed with this
-                  interview
-                </p>
-              )}
+              {user_agent && <p className="text-red-500">{user_agent}</p>}
               {transcript && (
                 <UserThinking role="test">{transcript}</UserThinking>
               )}
@@ -876,56 +872,4 @@ export default function InterviewPage() {
       </main>
     </>
   );
-}
-
-function splitTextIntoChunks(text: string, maxLength = 200): string[] {
-  if (!text) {
-    return []; // Return empty array for null, undefined, or empty input
-  }
-
-  // Ensure maxLength is at least 1
-  if (maxLength < 1) {
-    throw new Error("maxLength must be at least 1.");
-  }
-
-  const maxChunkLength = maxLength - 1; // Actual max characters per chunk (e.g., 199)
-  const chunks: string[] = [];
-  let startIndex = 0;
-
-  while (startIndex < text.length) {
-    // If the remaining text is within the allowed length, it's the last chunk
-    if (text.length - startIndex <= maxChunkLength) {
-      chunks.push(text.substring(startIndex));
-      break; // Exit the loop
-    }
-
-    // Determine the potential end index for the slice (exclusive)
-    // We look for a split point *up to* maxChunkLength characters away
-    const potentialEndIndex = startIndex + maxChunkLength;
-
-    // Find the last space character at or before the potential end index
-    const lastSpaceIndex = text.lastIndexOf(" ", potentialEndIndex);
-
-    let chunkEndIndex: number;
-
-    // Check if a suitable space was found within the current segment's range
-    if (lastSpaceIndex > startIndex) {
-      // Found a space, split there. The chunk ends *at* the space.
-      chunkEndIndex = lastSpaceIndex;
-      // The next chunk should start *after* the space
-      const chunk = text.substring(startIndex, chunkEndIndex);
-      chunks.push(chunk);
-      startIndex = chunkEndIndex + 1; // Move past the space
-    } else {
-      // No suitable space found within the limit [startIndex, potentialEndIndex].
-      // Perform a hard cut at maxChunkLength.
-      chunkEndIndex = startIndex + maxChunkLength; // End index for substring
-      const chunk = text.substring(startIndex, chunkEndIndex);
-      chunks.push(chunk);
-      startIndex = chunkEndIndex; // Start the next chunk immediately after the cut
-    }
-  }
-
-  console.log(chunks);
-  return chunks;
 }
