@@ -131,6 +131,7 @@ export default function InterviewPage() {
   const [messagesSubmitted, setMessagesSubmitted] = useState<boolean>(false);
   const [submittingMessages, setSubmittingMessages] = useState<boolean>(false);
   const [audioUrl, setAudioUrl] = useState<string>("");
+  const [user_agent, setUserAgent] = useState<string>("");
 
   const [showSurvey, setShowSurvey] = useState<boolean>(false);
   const [surveySubmitted, setSurveySubmitted] = useState<boolean>(false);
@@ -151,10 +152,17 @@ export default function InterviewPage() {
   const transcriptRef = useRef(transcript);
   const nameRef = useRef<string | null>(null);
   const emailRef = useRef<string | null>(null);
-  const chunksRef = useRef<string[]>([]);
-  const numberRef = useRef<number>(0);
 
   useEffect(() => {
+    const ua = navigator.userAgent;
+    if (ua.includes("Firefox")) {
+      setUserAgent(
+        "Please use a Chromium or WebKit browser to proceed with this interview",
+      );
+      setLoading(false);
+      return;
+    }
+
     const accessKey = window.location.href.split("/").pop();
 
     // Check for browser support (and vendor prefixes)
@@ -377,6 +385,10 @@ export default function InterviewPage() {
   }, [surveySubmitted, interview_status, router]);
 
   function modifyMessage(message: Message[]) {
+    if (message.length < 2) {
+      return;
+    }
+
     const current_message = message[message.length - 1];
 
     async function getAudio() {
@@ -586,6 +598,12 @@ export default function InterviewPage() {
                   An error occured, please refresh the page
                 </p>
               )}
+              {user_agent && (
+                <p className="text-red-500">
+                  Please use a Chromium or WebKit browser to proceed with this
+                  interview
+                </p>
+              )}
               {transcript && (
                 <UserThinking role="test">{transcript}</UserThinking>
               )}
@@ -595,11 +613,13 @@ export default function InterviewPage() {
               {thinking && (
                 <SystemThinking role={"test"}>Thinking</SystemThinking>
               )}
-              {interview_status === "uninitiated" && !loading && (
-                <UserThinking role={"test"}>
-                  Press the &quot;Start Interview&quot; button to begin
-                </UserThinking>
-              )}
+              {interview_status === "uninitiated" &&
+                !user_agent &&
+                !loading && (
+                  <UserThinking role={"test"}>
+                    Press the &quot;Start Interview&quot; button to begin
+                  </UserThinking>
+                )}
             </div>
           </div>
 
@@ -792,7 +812,7 @@ export default function InterviewPage() {
               {interview_status === "uninitiated" && (
                 <Button
                   className="border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
-                  disabled={loading}
+                  disabled={loading || user_agent.length > 0}
                   onClick={() => handleStartInterview()}
                 >
                   Start Interview
