@@ -155,7 +155,7 @@ export default function InterviewPage() {
 
   useEffect(() => {
     const ua = navigator.userAgent;
-    if (ua.includes("Gecko")) {
+    if (ua.includes("Firefox")) {
       console.log(ua);
       setUserAgent(
         "Please use a Chrome-based browser, such as Google Chrome or Brave, or a WebKit browser, to proceed with this interview.",
