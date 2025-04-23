@@ -3,6 +3,9 @@
 import { cookies } from "next/headers";
 
 const BASE_URL = "https://backend.tukma.work/api/v1/resume/";
+const TEST = "http://127.0.0.1:5000/resume";
+// const ALT_URL = "https://tukma-backend-copy-production.up.railway.app/resume";
+const ALT_URL = TEST;
 
 interface User {
   id: number;
@@ -88,10 +91,7 @@ export interface GetAllResumeData {
   resumes: GetResumeData[];
 }
 
-export async function uploadForJob(
-  file: File,
-  accessKey: string,
-) {
+export async function uploadForJob(file: File, accessKey: string) {
   try {
     console.log("Uploading for job");
     console.log(file);
@@ -324,7 +324,73 @@ export async function getResumeByJob(accessKey: string) {
 
     // Parse and return the successful response
     const data = (await response.json()) as GetAllResumeData;
-    console.dir(data, {depth: null});
+    console.dir(data, { depth: null });
+
+    return { success: true, data: data };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log(error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function saveResumeData(
+  file: File,
+  accessKey: string,
+  email: string,
+) {
+  try {
+    console.log("Uploading resume data");
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("access_key", accessKey);
+    formData.append("email", email);
+    console.log(formData);
+
+    const response = await fetch(`${ALT_URL}upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    // Check if the response is successful
+    if (!response.ok) {
+      console.log(response);
+      throw new Error("Failed to upload resume to flask backend");
+    }
+
+    // Parse and return the successful response
+    const data = (await response.json()) as { result: string };
+    console.log(data);
+
+    return { success: true, data: data };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.log(error.message);
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+export async function getResumeText(accessKey: string, email: string) {
+  try {
+    console.log("Fetching resume text data");
+
+    const response = await fetch(`${ALT_URL}/${accessKey}/${email}`, {
+      method: "GET",
+    });
+
+    // Check if the response is successful
+    if (!response.ok) {
+      console.log(response);
+      throw new Error("Failed to fetch resume text data");
+    }
+
+    // Parse and return the successful response
+    const data = (await response.json()) as {"content": string};
 
     return { success: true, data: data };
   } catch (error) {

@@ -19,10 +19,12 @@ import PDFUpload from "../../components/PDFUpload";
 import {
   getJobApplication,
   GetMyApplicationForJob,
+  saveResumeData,
   uploadForJob,
 } from "~/app/actions/resume";
 import { interviewStatus } from "~/app/actions/interview";
 import { checkSurveyCompletion } from "~/app/actions/survey";
+import { getUserInfo } from "~/app/actions/auth";
 
 // Format job type and shift type for display
 const formatJobType = (type: string) => {
@@ -166,9 +168,21 @@ export default function JobDetailsPage() {
       return; // Exit early if access key is invalid or missing
     }
 
-    const response = await uploadForJob(file, jobData?.job.accessKey);
+    let resumeRes;
+    let response;
+    const userInfo = await getUserInfo();
+    if (userInfo.success) {
+      resumeRes = await saveResumeData(
+        file,
+        jobData?.job.accessKey,
+        userInfo.data!.userDetails.username,
+      );
+    }
+    if (resumeRes?.success) {
+      response = await uploadForJob(file, jobData?.job.accessKey);
+    }
 
-    if (response.success) {
+    if (response?.success) {
       console.log("Resume uploaded successfully. Hash:", response.hash);
       // After successful upload, redirect to interview page instead of resume view
       router.push(`/applicant/interview/${jobData?.job.accessKey}`);

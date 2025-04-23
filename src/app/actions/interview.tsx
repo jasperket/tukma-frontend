@@ -185,6 +185,7 @@ function generatePromptWithQuestions(
   description: string,
   keywords: string,
   mappedQuestions: MappedQuestions,
+  resumeText: string,
 ) {
   const behavioralQuestions = mappedQuestions.behavioral
     .map((question, index) => `${index + 1}. ${question}`)
@@ -201,7 +202,10 @@ You are an interviewer for a ${title} position. Your role is to engage candidate
   Job Title: ${title}
   Job Description: ${description}
   Job Keywords: ${keywords}
- 
+
+  This is the resume context of the candidate. Use this information to enhance and improve their interview process.
+  ${resumeText}
+  
   Requirements/Qualifications:
  
   <Generate the requirements/qualifications for this job by referring to the job title, job description, and job keywords>
@@ -275,6 +279,7 @@ export async function startInterview(
   question: Question[],
   name: string,
   email: string,
+  resumeText: string,
 ) {
   try {
     console.log("Starting interview");
@@ -284,6 +289,7 @@ export async function startInterview(
       description,
       keywords,
       mapQuestions(question),
+      resumeText,
     );
 
     const response = await fetch(`${BASE_URL}start_interview`, {
@@ -545,12 +551,15 @@ export async function getFinishedInterviews(accessKey: string) {
   try {
     console.log("Fetching interview applicants");
 
-    const response = await fetch(`${BASE_URL}finished_interviews/${accessKey}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${BASE_URL}finished_interviews/${accessKey}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     // Check if the response is successful
     if (!response.ok) {
@@ -709,7 +718,10 @@ export async function getTechnicalResults(accessKey: string) {
   }
 }
 
-export async function getTechnicalResultsById(accessKey: string, userId: number) {
+export async function getTechnicalResultsById(
+  accessKey: string,
+  userId: number,
+) {
   try {
     console.log("Fetching technical results");
 
@@ -747,7 +759,10 @@ export async function getTechnicalResultsById(accessKey: string, userId: number)
   }
 }
 
-export async function getCommunicationResultsById(accessKey: string, userId: number) {
+export async function getCommunicationResultsById(
+  accessKey: string,
+  userId: number,
+) {
   try {
     console.log("Fetching communication results");
 

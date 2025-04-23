@@ -27,6 +27,7 @@ import {
   Question as SurveyQuestion,
 } from "~/app/actions/survey";
 import InvisibleAudioPlayer from "./components/AudioPlayer";
+import { getResumeText } from "~/app/actions/resume";
 
 interface Props {
   children: ReactNode;
@@ -152,6 +153,7 @@ export default function InterviewPage() {
   const transcriptRef = useRef(transcript);
   const nameRef = useRef<string | null>(null);
   const emailRef = useRef<string | null>(null);
+  const resumeText = useRef<string | null>(null);
 
   useEffect(() => {
     const ua = navigator.userAgent;
@@ -242,6 +244,7 @@ export default function InterviewPage() {
 
       const job = await getJobDetails(accessKey!);
       const question = await getQuestions(accessKey!);
+      const resumeTextRes = await getResumeText(accessKey!, emailRef.current);
       if (!job.success) {
         setError(true);
         return;
@@ -250,9 +253,14 @@ export default function InterviewPage() {
         setError(true);
         return;
       }
+      if (!resumeTextRes.success) {
+        setError(true);
+        return;
+      }
 
       setJob(job.job);
       setQuestion(question.data);
+      resumeText.current = resumeTextRes.data!.content;
 
       setLoading(false);
     }
@@ -544,6 +552,7 @@ export default function InterviewPage() {
       questions!,
       nameRef.current!,
       emailRef.current!,
+      resumeText.current!,
     );
 
     const messages = await getMessages(
