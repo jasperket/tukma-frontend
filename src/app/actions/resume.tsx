@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 
 const BASE_URL = "https://backend.tukma.work/api/v1/resume/";
-const ALT_URL = "https://tukma-backend-copy-production.up.railway.app/resume";
+const ALT_URL = "https://tukma-backend-copy-production.up.railway.app/resume/";
 
 interface User {
   id: number;
@@ -377,7 +377,7 @@ export async function getResumeText(accessKey: string, email: string) {
   try {
     console.log("Fetching resume text data");
 
-    const response = await fetch(`${ALT_URL}/${accessKey}/${email}`, {
+    const response = await fetch(`${ALT_URL}${accessKey}/${email}`, {
       method: "GET",
     });
 
