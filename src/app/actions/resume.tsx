@@ -3,9 +3,7 @@
 import { cookies } from "next/headers";
 
 const BASE_URL = "https://backend.tukma.work/api/v1/resume/";
-const TEST = "http://127.0.0.1:5000/resume";
-// const ALT_URL = "https://tukma-backend-copy-production.up.railway.app/resume";
-const ALT_URL = TEST;
+const ALT_URL = "https://tukma-backend-copy-production.up.railway.app/resume";
 
 interface User {
   id: number;
