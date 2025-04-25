@@ -72,6 +72,7 @@ export default function JobDetailsPage() {
   );
   const [hasInterview, setHasInterview] = useState<boolean>(false);
   const [surveyCompleted, setSurveyCompleted] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     async function fetchData() {
@@ -168,18 +169,26 @@ export default function JobDetailsPage() {
       return; // Exit early if access key is invalid or missing
     }
 
-    let resumeRes;
-    let response;
     const userInfo = await getUserInfo();
-    if (userInfo.success) {
-      resumeRes = await saveResumeData(
-        file,
-        jobData?.job.accessKey,
-        userInfo.data!.userDetails.username,
-      );
+    if (!userInfo.success) {
+      setError("Error uploading file. Please try again");
+      return;
     }
-    if (resumeRes?.success) {
-      response = await uploadForJob(file, jobData?.job.accessKey);
+
+    const resumeRes = await saveResumeData(
+      file,
+      jobData?.job.accessKey,
+      userInfo.data!.userDetails.username,
+    );
+    const response = await uploadForJob(file, jobData?.job.accessKey);
+
+    if (!resumeRes.success) {
+      setError("Error uploading file. Please try again");
+      return;
+    }
+    if (!response.success) {
+      setError("Error uploading file. Please try again");
+      return;
     }
 
     if (response?.success) {
@@ -324,15 +333,19 @@ export default function JobDetailsPage() {
               <Button
                 variant="outline"
                 disabled={
-                  loading || uploading || (!uploaded && application === null)
+                  loading || uploading || (!uploaded && application === null) || error.length > 0
                 }
-                className="flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d]"
+                className="flex-1 border-[#8b6e4e] bg-[#8b6e4e] text-white hover:bg-[#6d563d] hover:text-white"
                 onClick={() => uploadFile()}
               >
                 {loading ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                     Loading
+                  </>
+                ) : error ? (
+                  <>
+                    <p className="text-red-950">{error}</p>
                   </>
                 ) : uploading ? (
                   <>
