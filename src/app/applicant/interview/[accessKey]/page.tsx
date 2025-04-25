@@ -253,14 +253,10 @@ export default function InterviewPage() {
         setError(true);
         return;
       }
-      if (!resumeTextRes.success) {
-        setError(true);
-        return;
-      }
 
       setJob(job.job);
       setQuestion(question.data);
-      resumeText.current = resumeTextRes.data!.content;
+      resumeText.current = resumeTextRes.data?.content || "";
 
       setLoading(false);
     }

@@ -202,7 +202,7 @@ You are an interviewer for a ${title} position. Your role is to engage candidate
   Job Description: ${description}
   Job Keywords: ${keywords}
 
-  This is the resume context of the candidate. Use this information to enhance and improve their interview process.
+  This is the resume context of the candidate. Use this information to enhance and improve their interview process. If there is no resume context then you can ignore this.
   ${resumeText}
   
   Requirements/Qualifications:
