@@ -256,7 +256,7 @@ export default function InterviewPage() {
 
       setJob(job.job);
       setQuestion(question.data);
-      resumeText.current = resumeTextRes.data?.content || "";
+      resumeText.current = resumeTextRes.data?.content ?? "";
 
       setLoading(false);
     }
