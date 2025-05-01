@@ -125,7 +125,6 @@ export interface TechnicalResultsResponse {
 
 export interface GetMessagesResponse {
   access_key: string;
-  message_count: number;
   messages: Message[];
 }
 
