@@ -168,26 +168,12 @@ export default function HomePage() {
       <div className="mx-auto max-w-7xl">
         <footer className="border-t border-background-200 px-6 py-12">
           <div className="mx-auto max-w-6xl">
-            <div className="flex flex-col items-center justify-between md:flex-row">
-              <div className="mb-6 md:mb-0">
+            <div className="flex flex-col items-center justify-center">
+              <div className="flex flex-col items-center justify-center">
                 <Image src={logo} alt="Tukma Logo" className="h-6 w-auto" />
                 <p className="mt-2 text-text-300">
                   The future of recruitment is here.
                 </p>
-              </div>
-              <div className="flex space-x-8 text-text-300">
-                <a href="#" className="transition-colors hover:text-text-100">
-                  Privacy
-                </a>
-                <a href="#" className="transition-colors hover:text-text-100">
-                  Terms
-                </a>
-                <a href="#" className="transition-colors hover:text-text-100">
-                  Support
-                </a>
-                <a href="#" className="transition-colors hover:text-text-100">
-                  Contact
-                </a>
               </div>
             </div>
           </div>
